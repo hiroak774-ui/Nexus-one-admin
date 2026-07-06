@@ -1121,18 +1121,17 @@ function makeDailyRows(e){
   const iso=`${monthText}-${pad(day)}`;
   const src=byDate[iso];
   const appLogs=relatedApps.filter(a=>normalizeIsoDateText(a.date||a.targetDate||'')===iso);
-  const isWeekend=date.getDay()===0||date.getDay()===6;
   let row={
    d:`${pad(attCurrentMonth+1)}/${pad(day)}(${week})`,
    dayOnly:pad(day),
    iso,
    week,
-   in:isWeekend?'休日':'--:--',
-   out:isWeekend?'休日':'--:--',
-   work:isWeekend?'0.00h':'-',
-   main:isWeekend?'休日':'未打刻',
-   tag:isWeekend?'blue':'orange',
-   comment:isWeekend?'所定休日':'',
+   in:'--:--',
+   out:'--:--',
+   work:'-',
+   main:'休日',
+   tag:'blue',
+   comment:'勤務実績なし',
    logs:appLogs
   };
   if(src){
