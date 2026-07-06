@@ -1203,12 +1203,12 @@ async function adminExportAttendancePdf(e){
  if(!e)return;
  if(!adminHasApi()){modal('PDF出力できません','GAS API URLが未設定です。','確認');return;}
  try{
-  toast('PDFを作成しています');
+  toast('PDFを作成中です');
   const month=`${attCurrentYear}-${String(attCurrentMonth+1).padStart(2,'0')}`;
   const res=await adminApi(ADMIN_GAS_ACTIONS.exportAttendancePdf,{employeeId:e.id,month});
   if(!res||!res.base64)throw new Error('PDFデータが取得できませんでした。');
   downloadBase64File(res.base64,res.mimeType||'application/pdf',res.fileName||`勤怠報告書_${month}_${e.name}.pdf`);
-  toast('PDFを出力しました');
+  toast('PDFのダウンロードを開始しました');
  }catch(err){console.warn('[NEXUS ONE Admin] PDF export failed:',err);modal('PDF出力に失敗しました',err.message||String(err),'確認');}
 }
 function downloadBase64File(base64,mimeType,fileName){
@@ -1350,7 +1350,7 @@ function switchView(view){$$('.nav button').forEach(b=>b.classList.toggle('activ
 function openDrawer(title,sub,html){$('#drawerTitle').textContent=title;$('#drawerSub').textContent=sub;$('#drawerBody').innerHTML=html;$('#drawerBackdrop').classList.add('show');$('#drawer').classList.add('show');}
 function closeDrawer(){$('#drawerBackdrop').classList.remove('show');$('#drawer').classList.remove('show');}
 function modal(title,text,ok='実行',content=''){return new Promise(res=>{$('#modalTitle').textContent=title;$('#modalText').textContent=text;const mc=$('#modalContent');if(mc)mc.innerHTML=content||'';$('#modalOk').textContent=ok;$('#modal').classList.add('show');const done=v=>{$('#modal').classList.remove('show');if(mc)mc.innerHTML='';res(v);};$('#modalOk').onclick=()=>done(true);$('#modalCancel').onclick=()=>done(false);$('#modal').onclick=e=>{if(e.target.id==='modal')done(false)}})}
-function toast(){const t=$('#toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1300)}
+function toast(message){const t=$('#toast');if(!t)return;const title=t.querySelector('.toast-title');if(title)title.textContent=message||'完了しました';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600)}
 function detailCards(items){return `<div class="detail-grid">${items.map(([l,v])=>`<div class="detail-card"><div class="detail-label">${l}</div><div class="detail-value">${v}</div></div>`).join('')}</div>`}
 function bindRows(){document.body.addEventListener('click',async e=>{const row=e.target.closest('.trow');if(!row)return;const kind=row.dataset.kind;if(kind==='today'){const r=todayRows.find(x=>x.id===row.dataset.id);openDrawer(r.name,'今日の勤務状況',`<div class="drawer-section"><h4>基本情報</h4>${detailCards([['社員ID',r.id],['所属会社',r.company],['勤務方式',r.type],['基本パターン',r.pattern],['出勤',r.in],['退勤',r.out]])}</div><div class="drawer-section"><h4>状態</h4><div class="note">${r.status} / 勤務場所：${r.place}</div><div class="drawer-actions"><button class="action" onclick="switchView('attendance');closeDrawer();">勤怠管理で見る</button></div></div>`)}
  if(kind==='attendance'){const r=attendance.find(x=>x.id===row.dataset.id);if(r)openAttendanceDrawer(r.id)}
