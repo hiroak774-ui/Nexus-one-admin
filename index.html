@@ -1068,7 +1068,8 @@ let appCurrentMonth=6;
 const appTypeList=['すべて','打刻修正','休暇申請','残業申請'];
 const appStatusList=['すべて','承認待ち','再提出済み','差戻し中','承認済み'];
 function appRequestMonth(r){const d=new Date(r.date+'T00:00:00');return d.getFullYear()===appCurrentYear&&d.getMonth()===appCurrentMonth;}
-function appMonthly(){return apps.filter(appRequestMonth)}
+function isCanceledApplication(r){return String(r?.status||'').includes('取消')}
+function appMonthly(){return apps.filter(r=>!isCanceledApplication(r)).filter(appRequestMonth)}
 function appFiltered(){const q=appSearchQuery.trim().toLowerCase();return appMonthly().filter(r=>(appTypeFilter==='すべて'||r.type===appTypeFilter)&&(appStatusFilter==='すべて'||r.status===appStatusFilter)&&(!q||(`${r.id} ${r.employeeId} ${r.name} ${r.type} ${r.body}`).toLowerCase().includes(q)))}
 function renderApplicationFilters(){
  const typeBox=$('#appTypeFilters'), statusBox=$('#appStatusFilters');
@@ -1297,7 +1298,12 @@ function render(){
  renderApplicationRows();
  renderEmployeeRows();
  renderRuleRows();
- $('#timelineList').innerHTML=timeline.map(t=>{
+ const visibleTimeline=timeline.filter(t=>{
+  const kind=Array.isArray(t)?t[0]:(t.kind||t.type||'管理');
+  const text=Array.isArray(t)?t[2]:(t.text||t.body||t.action||'');
+  return !(kind==='申請' && String(text).includes('取消'));
+ });
+ $('#timelineList').innerHTML=visibleTimeline.map(t=>{
   const kind=Array.isArray(t)?t[0]:(t.kind||t.type||'管理');
   const name=Array.isArray(t)?t[1]:(t.name||t.employeeName||'-');
   const text=Array.isArray(t)?t[2]:(t.text||t.body||t.action||'');
@@ -1524,7 +1530,15 @@ function applyAdminDashboardData(data){
  renderDashboardSummary(window.__adminDashboardSummary);
 }
 function applyAdminAttendanceData(data){if(data&&Array.isArray(data.rows))replaceAdminArray(attendance,data.rows);}
-function applyAdminApplicationsData(data){if(data&&Array.isArray(data.rows))replaceAdminArray(apps,data.rows);}
+function applyAdminApplicationsData(data){
+ if(data&&Array.isArray(data.rows)){
+  replaceAdminArray(apps,data.rows);
+  const pendingFromRows=apps.filter(r=>!isCanceledApplication(r) && r.status==='承認待ち').length;
+  const summary=data.summary||{};
+  const pending=Number(summary.wait ?? summary.pendingApplications ?? summary.pendingApps ?? pendingFromRows);
+  window.__adminDashboardSummary=Object.assign({working:0,completed:0,notClocked:0,pendingApplications:0},window.__adminDashboardSummary||{}, {pendingApplications:pending,pendingApps:pending});
+ }
+}
 function applyAdminEmployeesData(data){if(data&&Array.isArray(data.rows))replaceAdminArray(employees,data.rows);}
 function applyAdminWorkPatternsData(data){if(data&&Array.isArray(data.rows))replaceAdminArray(rules,data.rows);}
 async function loadAdminInitialData(options={}){
