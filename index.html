@@ -1023,29 +1023,14 @@ const ADMIN_GAS_FIELD_MAP={
 
 const todayRows=[];
 // DashboardはGAS実データ専用。未取得時はサンプルを表示しない。
-const attendance=[
- {id:'EMP-0001',name:'長谷部 浩章',companyId:'HRC',company:'HR COMPANY',type:'固定勤務',patternId:'WP002',pattern:'9-18',days:21,total:'168.0h',ot:'12.0h',late:0,early:0,corrections:1,leave:0,needs:0,gps:'取得',status:'正常',cls:'green',closed:'未締め',email:'hiro@example.com',paidUsed:2,paidRemain:8,paidExpire:0,notes:'月次確認済み。締め処理可能です。'},
- {id:'EMP-0002',name:'シフト 花子',companyId:'HRC',company:'HR COMPANY',type:'シフト勤務',patternId:'WP003',pattern:'10-19',days:19,total:'151.5h',ot:'4.5h',late:1,early:0,corrections:2,leave:1,needs:3,gps:'取得',status:'要確認',cls:'orange',closed:'未締め',email:'shift@example.com',paidUsed:0,paidRemain:10,paidExpire:0,notes:'遅刻1件、打刻修正2件の確認が必要です。'},
- {id:'EMP-0003',name:'田中 一郎',companyId:'ITC',company:'ITキャリアアップシステム',type:'固定勤務',patternId:'WP001',pattern:'8-17',days:20,total:'160.0h',ot:'8.0h',late:0,early:0,corrections:0,leave:0,needs:0,gps:'取得',status:'締め済',cls:'green',closed:'締め済',email:'tanaka@example.com',paidUsed:1,paidRemain:9,paidExpire:0,notes:'2026/07/03 09:20 に締め済み。'},
- {id:'EMP-0004',name:'鈴木 未来',companyId:'HRC',company:'HR COMPANY',type:'固定勤務',patternId:'WP002',pattern:'9-18',days:17,total:'136.0h',ot:'0.0h',late:2,early:0,corrections:0,leave:3,needs:2,gps:'取得',status:'要確認',cls:'orange',closed:'未締め',email:'suzuki@example.com',paidUsed:3,paidRemain:7,paidExpire:0,notes:'遅刻2件の確認が必要です。'},
- {id:'EMP-0005',name:'佐藤 蓮',companyId:'ITC',company:'ITキャリアアップシステム',type:'シフト勤務',patternId:'WP005',pattern:'日別シフトに準ずる',days:18,total:'144.0h',ot:'10.0h',late:0,early:1,corrections:1,leave:2,needs:2,gps:'未取得',status:'要確認',cls:'orange',closed:'未締め',email:'sato@example.com',paidUsed:2,paidRemain:8,paidExpire:1,notes:'位置情報未取得と早退確認があります。'}
-];
+const attendance=[];
+
 let attCurrentYear=2026,attCurrentMonth=6,attFilter='all',attSearchQuery='';
-const attSendHistories={'EMP-0002':[{date:'7/02',message:'打刻修正2件の確認を依頼しました。',status:'送信済'}],'EMP-0004':[{date:'7/01',message:'遅刻日の確認を依頼しました。',status:'対応済'}],'EMP-0005':[{date:'7/03',message:'位置情報未取得日の確認を依頼しました。',status:'送信済'}]};
-const apps=[
- {id:'APP-0001',employeeId:'EMP-0001',name:'長谷部 浩章',companyId:'HRC',company:'HR COMPANY',type:'打刻修正',date:'2026-07-02',requested:'2026-07-03 12:18',body:'退勤時刻 未打刻 → 18:32',reason:'外出先から戻った後、退勤打刻を失念したため。実際の退勤時刻は18:32です。',related:'対象勤怠ID：ATD-0001 / 出勤 08:55 / 退勤 未打刻 / 勤務場所 本社',status:'再提出済み',cls:'blue',updated:'07/03',processed:'',adminComment:'退勤時刻の根拠を追記してください。',history:[['v1','2026/07/02 20:11','申請','退勤打刻の修正を申請'],['v1','2026/07/03 09:14','差戻し','退勤時刻の根拠が不足'],['v2','2026/07/03 12:18','再提出','業務チャットの終了時刻を追記']]},
- {id:'APP-0002',employeeId:'EMP-0002',name:'シフト 花子',companyId:'HRC',company:'HR COMPANY',type:'休暇申請',date:'2026-07-10',requested:'2026-07-03 10:04',body:'有給休暇 / 私用のため',reason:'私用のため終日有給を取得します。',related:'有給残日数：10日 / 対象日：通常勤務予定',status:'承認待ち',cls:'violet',updated:'07/03',processed:'',adminComment:'',history:[['v1','2026/07/03 10:04','申請','有給休暇を申請']]},
- {id:'APP-0003',employeeId:'EMP-0005',name:'佐藤 蓮',companyId:'ITC',company:'ITキャリアアップシステム',type:'残業申請',date:'2026-07-01',requested:'2026-07-02 18:40',body:'退勤予定 21:00 / 締切対応',reason:'顧客対応の締切が重なったため、21:00まで残業予定です。',related:'勤務予定：12:00-21:00 / 休憩 60分',status:'承認待ち',cls:'violet',updated:'07/02',processed:'',adminComment:'',history:[['v1','2026/07/02 18:40','申請','残業申請を提出']]},
- {id:'APP-0004',employeeId:'EMP-0003',name:'田中 一郎',companyId:'ITC',company:'ITキャリアアップシステム',type:'残業申請',date:'2026-07-02',requested:'2026-07-03 08:55',body:'退勤予定 20:00 / 障害対応',reason:'システム障害の一次対応を継続したため。',related:'勤怠ログ：出勤 08:58 / 退勤 20:04',status:'承認待ち',cls:'violet',updated:'07/03',processed:'',adminComment:'',history:[['v1','2026/07/03 08:55','申請','残業申請を提出']]}
-];
-const employees=[
- {id:'EMP-0001',number:'001',name:'長谷部 浩章',email:'hiro@example.com',companyId:'HRC',company:'HR COMPANY',roleId:'ADMIN',role:'管理者',employment:'在籍',registration:'承認済',account:'有効',type:'固定勤務',patternId:'WP002',pattern:'9-18',paidTotal:10,paidUsed:2,paidRemain:8,joined:'2024/04/01',approvedAt:'2024/04/01 09:12'},
- {id:'EMP-0002',number:'002',name:'シフト 花子',email:'shift@example.com',companyId:'HRC',company:'HR COMPANY',roleId:'USER',role:'社員',employment:'在籍',registration:'承認済',account:'有効',type:'シフト勤務',patternId:'',pattern:'日別シフトに準ずる',paidTotal:10,paidUsed:0,paidRemain:10,joined:'2023/10/01',approvedAt:'2023/10/01 10:20'},
- {id:'EMP-0003',number:'003',name:'田中 一郎',email:'tanaka@example.com',companyId:'ITC',company:'ITキャリアアップシステム',roleId:'USER',role:'社員',employment:'在籍',registration:'承認済',account:'有効',type:'固定勤務',patternId:'WP001',pattern:'8-17',paidTotal:10,paidUsed:1,paidRemain:9,joined:'2022/07/01',approvedAt:'2022/07/01 08:58'},
- {id:'EMP-0004',number:'004',name:'鈴木 未来',email:'suzuki@example.com',companyId:'HRC',company:'HR COMPANY',roleId:'USER',role:'社員',employment:'在籍',registration:'承認済',account:'無効',type:'固定勤務',patternId:'WP002',pattern:'9-18',paidTotal:10,paidUsed:3,paidRemain:7,joined:'2024/11/01',approvedAt:'2024/11/01 12:35'},
- {id:'EMP-0005',number:'005',name:'佐藤 蓮',email:'sato@example.com',companyId:'ITC',company:'ITキャリアアップシステム',roleId:'USER',role:'社員',employment:'在籍',registration:'承認済',account:'有効',type:'シフト勤務',patternId:'',pattern:'日別シフトに準ずる',paidTotal:10,paidUsed:2,paidRemain:8,joined:'2025/01/15',approvedAt:'2025/01/15 11:08'},
- {id:'EMP-0006',number:'006',name:'退職 太郎',email:'retired@example.com',companyId:'HRC',company:'HR COMPANY',roleId:'USER',role:'社員',employment:'退職',registration:'承認済',account:'無効',type:'固定勤務',patternId:'WP002',pattern:'9-18',paidTotal:10,paidUsed:5,paidRemain:5,joined:'2023/04/01',approvedAt:'2023/04/01 09:20'}
-];
+const attSendHistories={};
+const apps=[];
+
+const employees=[];
+
 let empCompanyFilter='all', empWorkFilter='all', empStatusFilter='all', empRoleFilter='all', empSearchQuery='', empSort='default';
 const rules=[
  {id:'WP001',name:'8-17',type:'固定勤務',start:'08:00',end:'17:00',break:'60分',users:4,status:'有効',cls:'green',late:'1分以上',early:'終業予定前',overtime:'8時間超過分'},
@@ -1120,46 +1105,85 @@ function issueBlock(e){const issues=attendanceIssues(e); if(!issues.length)retur
 function makeDailyRows(e){
  const lastDay=new Date(attCurrentYear,attCurrentMonth+1,0).getDate();
  const weekNames=['日','月','火','水','木','金','土'];
- const rows=[];
  const pad=n=>String(n).padStart(2,'0');
+ const monthText=`${attCurrentYear}-${pad(attCurrentMonth+1)}`;
+ const actualRows=Array.isArray(e.daily)?e.daily:[];
+ const byDate={};
+ actualRows.forEach(r=>{
+  const iso=normalizeIsoDateText(r.date||r.iso||'');
+  if(iso&&iso.indexOf(monthText)===0)byDate[iso]=r;
+ });
+ const relatedApps=(apps||[]).filter(a=>!isCanceledApplication(a)&&String(a.employeeId||'')===String(e.id||''));
+ const rows=[];
  for(let day=1;day<=lastDay;day++){
   const date=new Date(attCurrentYear,attCurrentMonth,day);
   const week=weekNames[date.getDay()];
+  const iso=`${monthText}-${pad(day)}`;
+  const src=byDate[iso];
+  const appLogs=relatedApps.filter(a=>normalizeIsoDateText(a.date||a.targetDate||'')===iso);
   const isWeekend=date.getDay()===0||date.getDay()===6;
   let row={
    d:`${pad(attCurrentMonth+1)}/${pad(day)}(${week})`,
    dayOnly:pad(day),
-   iso:`${attCurrentYear}-${pad(attCurrentMonth+1)}-${pad(day)}`,
+   iso,
    week,
-   in:isWeekend?'休日':'09:00',
-   out:isWeekend?'休日':'18:00',
-   work:isWeekend?'0.00h':'8.00h',
-   main:isWeekend?'休日':'通常',
-   tag:isWeekend?'blue':'green',
-   comment:isWeekend?'所定休日':''
+   in:isWeekend?'休日':'--:--',
+   out:isWeekend?'休日':'--:--',
+   work:isWeekend?'0.00h':'-',
+   main:isWeekend?'休日':'未打刻',
+   tag:isWeekend?'blue':'orange',
+   comment:isWeekend?'所定休日':'',
+   logs:appLogs
   };
-  if(!isWeekend){
-   if(e.late>0 && day===1){row.in='09:08';row.work='7.87h';row.main='遅刻';row.tag='orange';row.comment='電車遅延により遅刻。'}
-   if(e.corrections>0 && day===2){row.out='18:32';row.work='8.53h';row.main='打刻修正';row.tag='blue';row.comment='退勤打刻修正済み。'}
-   if(e.early>0 && day===3){row.out='17:42';row.work='7.70h';row.main='早退';row.tag='orange';row.comment='早退申請承認済み。'}
-   if(e.gps==='未取得' && day===6){row.in='09:01';row.work='7.98h';row.main='位置情報未取得';row.tag='orange';row.comment='位置情報が取得できませんでした。'}
-   if(e.leave>0 && [7,14,21].includes(day) && e.leave >= [7,14,21].indexOf(day)+1){row.in='休暇';row.out='休暇';row.work='0.00h';row.main='休暇';row.tag='violet';row.comment='休暇申請承認済み。'}
-   if(e.ot!=='0.0h' && [10,17].includes(day)){row.out='19:12';row.work='9.20h';row.main='残業';row.tag='blue';row.comment='残業申請承認済み。'}
+  if(src){
+   const statusText=String(src.status||'').trim();
+   const inText=src.in||src.clockIn||'--:--';
+   const outText=src.out||src.clockOut||'--:--';
+   row.in=inText;
+   row.out=outText;
+   row.work=src.total||src.work||src.workTime||'-';
+   row.main=statusText||((inText&&inText!=='--:--')?(outText&&outText!=='--:--'?'正常':'勤務中'):'未打刻');
+   row.tag=attendanceDailyStatusClass_(row.main);
+   row.comment=src.comment||src.note||src.pattern||'';
+   row.place=src.place||src.locationName||'-';
+   row.scheduled=src.scheduled||'';
   }
   rows.push(row);
  }
  return rows;
+}
+function normalizeIsoDateText(v){
+ const s=String(v||'').trim();
+ if(!s)return '';
+ const m=s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+ if(!m)return '';
+ return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+}
+function attendanceDailyStatusClass_(text){
+ const s=String(text||'');
+ if(s.includes('要確認')||s.includes('遅刻')||s.includes('早退')||s.includes('未取得')||s.includes('未打刻'))return 'orange';
+ if(s.includes('休暇'))return 'violet';
+ if(s.includes('休日'))return 'blue';
+ return 'green';
 }
 function renderSendHistory(e){const hs=attSendHistories[e.id]||[]; return hs.length?`<div class="log-list">${hs.map(h=>`<div class="log-item"><div class="log-top"><span>${h.date}</span><span>${h.status}</span></div><div class="log-body"><strong>宛先：</strong>${h.to||e.email}<br>${h.message}</div></div>`).join('')}</div>`:'<div class="summary-note">対象者への確認依頼履歴はありません。</div>'}
 function openAttendanceDrawer(id,tab='overview'){
  const e=attendance.find(x=>x.id===id); if(!e)return;
  const daily=makeDailyRows(e);
  const overview=`<div class="detail-grid"><div class="detail-card"><div class="detail-label">勤務日数</div><div class="detail-value">${e.days}日</div></div><div class="detail-card"><div class="detail-label">総勤務</div><div class="detail-value">${e.total}</div></div><div class="detail-card"><div class="detail-label">残業</div><div class="detail-value">${e.ot}</div></div><div class="detail-card"><div class="detail-label">遅刻</div><div class="detail-value">${e.late}回</div></div><div class="detail-card"><div class="detail-label">早退</div><div class="detail-value">${e.early}回</div></div><div class="detail-card"><div class="detail-label">有給取得</div><div class="detail-value">${e.paidUsed}日</div></div><div class="detail-card"><div class="detail-label">有給残</div><div class="detail-value">${e.paidRemain}日</div></div><div class="detail-card"><div class="detail-label">状態</div><div class="detail-value">${e.status}</div></div></div>${issueBlock(e)}<div class="close-note">${e.notes}</div><div class="drawer-actions"><button class="action" onclick="openAttendanceExport('CSV','${e.id}')">個別CSV</button><button class="action" onclick="openAttendanceExport('PDF','${e.id}')">月次PDF</button><button class="action primary" onclick="closeAttendanceEmployee('${e.id}')">個別締め</button></div>`;
- const days=`<div class="daily-month-card"><div class="day-list-head"><span><strong>${attCurrentYear}年${String(attCurrentMonth+1).padStart(2,'0')}月</strong></span></div><div class="daily-table"><div class="daily-head"><div>日付</div><div>出勤</div><div>退勤</div><div>勤務</div><div>内容</div><div>状態</div></div><div class="daily-body">${daily.map((d,i)=>`<div class="day-row" onclick="openAttendanceDay('${e.id}',${i})"><div><strong>${d.d}</strong></div><div>${d.in}</div><div>${d.out}</div><div>${d.work}</div><div>${d.comment||'通常勤務'}</div><div>${status(d.tag,d.main)}</div></div>`).join('')}</div></div></div>`;
+ const days=`<div class="daily-month-card"><div class="day-list-head"><span><strong>${attCurrentYear}年${String(attCurrentMonth+1).padStart(2,'0')}月</strong></span></div><div class="daily-table"><div class="daily-head"><div>日付</div><div>出勤</div><div>退勤</div><div>勤務</div><div>内容</div><div>状態</div></div><div class="daily-body">${daily.map((d,i)=>`<div class="day-row" onclick="openAttendanceDay('${e.id}',${i})"><div><strong>${d.d}</strong></div><div>${d.in}</div><div>${d.out}</div><div>${d.work}</div><div>${d.comment||'-'}</div><div>${status(d.tag,d.main)}</div></div>`).join('')}</div></div></div>`;
  const requests=`<div class="request-history-stack"><div class="summary-note">対象者へ送信した確認依頼の履歴を確認できます。必要に応じて、勤怠確認メッセージを送信できます。</div>${renderSendHistory(e)}</div><div class="drawer-actions"><button class="action primary" onclick="requestAttendanceCheck('${e.id}')">対象者へ確認依頼</button></div>`;
  openDrawer(e.name,`${attCurrentYear}年${attCurrentMonth+1}月 / ${e.company}`,`<div class="workspace-tabs"><button class="workspace-tab ${tab==='overview'?'active':''}" onclick="openAttendanceDrawer('${e.id}','overview')">概要</button><button class="workspace-tab ${tab==='days'?'active':''}" onclick="openAttendanceDrawer('${e.id}','days')">日別勤怠</button><button class="workspace-tab ${tab==='requests'?'active':''}" onclick="openAttendanceDrawer('${e.id}','requests')">確認依頼</button></div><div class="workspace-section ${tab==='overview'?'active':''}">${overview}</div><div class="workspace-section ${tab==='days'?'active':''}">${days}</div><div class="workspace-section ${tab==='requests'?'active':''}">${requests}</div>`);
 }
-function openAttendanceDay(id,index){const e=attendance.find(x=>x.id===id); if(!e)return; const d=makeDailyRows(e)[index]; const hasLog=d.comment; openDrawer(`${e.name} / ${d.d}`,`日別勤怠詳細`, `<button class="back-link" onclick="openAttendanceDrawer('${e.id}','days')">← 日別勤怠へ戻る</button><div class="detail-grid"><div class="detail-card"><div class="detail-label">出勤</div><div class="detail-value">${d.in}</div></div><div class="detail-card"><div class="detail-label">退勤</div><div class="detail-value">${d.out}</div></div><div class="detail-card"><div class="detail-label">勤務</div><div class="detail-value">${d.work}</div></div><div class="detail-card"><div class="detail-label">状態</div><div class="detail-value">${d.main}</div></div></div><div class="log-box"><div class="log-title">申請・承認ログ</div>${hasLog?`<div class="log-line"><div class="log-label">内容</div><div class="log-value">${d.comment}</div></div><div class="log-line"><div class="log-label">承認日時</div><div class="log-value">${attCurrentYear}/${String(attCurrentMonth+1).padStart(2,'0')}/${String(index+1).padStart(2,'0')} 10:02</div></div><div class="log-line"><div class="log-label">管理者</div><div class="log-value">長谷部 浩章</div></div>`:`<div class="log-line"><div class="log-label">状態</div><div class="log-value">この日に紐づく申請ログはありません。</div></div>`}</div><div class="drawer-actions"><button class="action primary" onclick="requestAttendanceCheck('${e.id}','${d.d}')">この日の確認を依頼</button></div>`)}
+function openAttendanceDay(id,index){
+ const e=attendance.find(x=>x.id===id); if(!e)return;
+ const d=makeDailyRows(e)[index];
+ const logs=Array.isArray(d.logs)?d.logs:[];
+ const logHtml=logs.length
+  ? logs.map(a=>`<div class="log-line"><div class="log-label">${a.type||'申請'}</div><div class="log-value">${a.body||a.reason||'申請内容なし'}<br><small>${a.status||''}${a.requested?` / ${a.requested}`:''}</small></div></div>`).join('')
+  : `<div class="log-line"><div class="log-label">状態</div><div class="log-value">この日に紐づく申請ログはありません。</div></div>`;
+ openDrawer(`${e.name} / ${d.d}`,`日別勤怠詳細`, `<button class="back-link" onclick="openAttendanceDrawer('${e.id}','days')">← 日別勤怠へ戻る</button><div class="detail-grid"><div class="detail-card"><div class="detail-label">出勤</div><div class="detail-value">${d.in}</div></div><div class="detail-card"><div class="detail-label">退勤</div><div class="detail-value">${d.out}</div></div><div class="detail-card"><div class="detail-label">勤務</div><div class="detail-value">${d.work}</div></div><div class="detail-card"><div class="detail-label">状態</div><div class="detail-value">${d.main}</div></div></div><div class="log-box"><div class="log-title">申請・承認ログ</div>${logHtml}</div><div class="drawer-actions"><button class="action primary" onclick="requestAttendanceCheck('${e.id}','${d.d}')">この日の確認を依頼</button></div>`)
+}
 function confirmAttendanceIssue(id,name){const e=attendance.find(x=>x.id===id); if(!e)return; e.needs=Math.max(0,e.needs-1); if(e.needs===0&&e.status==='要確認'){e.status='正常';e.cls='green'} renderAttendanceRows(); openAttendanceDrawer(id,'overview');}
 function requestAttendanceCheck(id,dayLabel='月次勤怠'){
  const e=attendance.find(x=>x.id===id); if(!e)return;
