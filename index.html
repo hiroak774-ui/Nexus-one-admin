@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NEXUS ONE Admin Console v49</title>
+<title>NEXUS ONE Admin Console v50</title>
 <style>
 :root{
   --ink:#e5f0ff; --muted:#94a3b8; --soft:#64748b;
@@ -646,7 +646,7 @@ body.auth-locked .shell{display:none}
 .login-screen{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:28px;background:radial-gradient(circle at 50% 18%,rgba(37,99,235,.20),transparent 34%),linear-gradient(135deg,#020617,#071426 58%,#020617);}
 body:not(.auth-locked) .login-screen{display:none}
 .login-card{width:min(430px,calc(100vw - 40px));border-radius:34px;padding:30px;background:rgba(15,23,42,.68);border:1px solid rgba(148,163,184,.20);box-shadow:0 28px 90px rgba(0,0,0,.42);backdrop-filter:blur(28px);}
-.login-brand{display:flex;align-items:center;margin-bottom:26px}.login-brand-logo{height:42px;width:auto;display:block;filter:drop-shadow(0 0 18px rgba(56,189,248,.18))}.login-brand-title{font-size:18px;font-weight:950;letter-spacing:-.04em}.login-brand-sub{font-size:11px;font-weight:900;color:var(--soft);margin-top:3px}.login-heading{font-size:24px;font-weight:950;letter-spacing:-.05em;margin-bottom:8px}.login-lead{font-size:12px;line-height:1.8;color:var(--muted);font-weight:850;margin-bottom:20px}.login-form{display:grid;gap:12px}.login-field{display:grid;gap:7px}.login-field label{font-size:11px;font-weight:950;color:var(--soft)}.login-field input{height:46px;border-radius:17px;border:1px solid rgba(148,163,184,.20);background:rgba(255,255,255,.06);color:var(--ink);padding:0 14px;outline:0;font-weight:900}.login-field input:focus{border-color:rgba(56,189,248,.42);box-shadow:0 0 0 4px rgba(56,189,248,.08)}.login-error{display:none;border-radius:15px;padding:11px 12px;background:rgba(239,68,68,.10);border:1px solid rgba(239,68,68,.20);color:#fecaca;font-size:12px;font-weight:850;line-height:1.6}.login-error.show{display:block}.login-button{height:46px;border:0;border-radius:17px;background:linear-gradient(135deg,#1e40af,#2563eb,#38bdf8);color:#fff;font-weight:950;box-shadow:0 18px 40px rgba(37,99,235,.26);cursor:pointer}.login-button:disabled{opacity:.58;cursor:wait}.login-note{margin-top:14px;font-size:10px;color:var(--soft);font-weight:800;line-height:1.6}.admin-logout{margin-top:10px;width:100%;height:32px;border-radius:12px;border:1px solid rgba(148,163,184,.18);background:rgba(255,255,255,.045);color:var(--soft);font-size:11px;font-weight:950;cursor:pointer}.admin-logout:hover{color:var(--ink);border-color:rgba(125,211,252,.24);background:rgba(56,189,248,.07)}
+.login-brand{display:flex;align-items:center;margin-bottom:26px}.login-brand-logo{height:42px;width:auto;display:block;filter:drop-shadow(0 0 18px rgba(56,189,248,.18))}.login-brand-title{font-size:18px;font-weight:950;letter-spacing:-.04em}.login-brand-sub{font-size:11px;font-weight:900;color:var(--soft);margin-top:3px}.login-heading{font-size:24px;font-weight:950;letter-spacing:-.05em;margin-bottom:8px}.login-lead{font-size:12px;line-height:1.8;color:var(--muted);font-weight:850;margin-bottom:20px}.login-form{display:grid;gap:12px}.login-field{display:grid;gap:7px}.login-field label{font-size:11px;font-weight:950;color:var(--soft)}.login-field input{height:46px;border-radius:17px;border:1px solid rgba(148,163,184,.20);background:rgba(255,255,255,.06);color:var(--ink);padding:0 14px;outline:0;font-weight:900}.login-field input:focus{border-color:rgba(56,189,248,.42);box-shadow:0 0 0 4px rgba(56,189,248,.08)}.login-error{display:none;border-radius:15px;padding:11px 12px;background:rgba(239,68,68,.10);border:1px solid rgba(239,68,68,.20);color:#fecaca;font-size:12px;font-weight:850;line-height:1.6}.login-error.show{display:block}.login-button{height:46px;border:0;border-radius:17px;background:linear-gradient(135deg,#1e40af,#2563eb,#38bdf8);color:#fff;font-weight:950;box-shadow:0 18px 40px rgba(37,99,235,.26);cursor:pointer}.login-button:disabled{opacity:.58;cursor:wait}.login-separator{display:flex;align-items:center;gap:12px;margin:14px 0;color:var(--soft);font-size:10px;font-weight:950;letter-spacing:.08em}.login-separator:before,.login-separator:after{content:"";height:1px;flex:1;background:rgba(148,163,184,.16)}.google-login-button{height:46px;width:100%;border-radius:17px;border:1px solid rgba(148,163,184,.20);background:rgba(255,255,255,.92);color:#111827;font-size:13px;font-weight:950;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;box-shadow:0 14px 34px rgba(0,0,0,.18)}.google-login-button:hover{background:#fff}.google-login-button:disabled{opacity:.58;cursor:wait}.google-mark{width:18px;height:18px;display:inline-grid;place-items:center;flex:0 0 18px}.google-mark svg{width:18px;height:18px;display:block}.login-note{display:none}.admin-logout{margin-top:10px;width:100%;height:32px;border-radius:12px;border:1px solid rgba(148,163,184,.18);background:rgba(255,255,255,.045);color:var(--soft);font-size:11px;font-weight:950;cursor:pointer}.admin-logout:hover{color:var(--ink);border-color:rgba(125,211,252,.24);background:rgba(56,189,248,.07)}
 body.admin-loading .shell{display:none}
 body.admin-loading .login-screen{display:none}
 .loading-screen{position:fixed;inset:0;z-index:55;display:none;align-items:center;justify-content:center;padding:28px;background:radial-gradient(circle at 50% 20%,rgba(56,189,248,.20),transparent 32%),linear-gradient(135deg,#020617,#071426 58%,#020617);}
@@ -680,7 +680,8 @@ body.admin-loading .loading-screen{display:flex}
       <div class="login-error" id="adminLoginError"></div>
       <button class="login-button" id="adminLoginBtn" type="submit">ログイン</button>
     </form>
-    <div class="login-note">ログイン後にGASから実データを取得します。取得前にサンプルデータは表示しません。</div>
+    <div class="login-separator">OR</div>
+    <button class="google-login-button" id="googleLoginBtn" type="button"><span class="google-mark" aria-hidden="true"><svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.91c1.7-1.57 2.69-3.88 2.69-6.62Z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.26c-.81.54-1.84.86-3.05.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18Z"/><path fill="#FBBC05" d="M3.96 10.71a5.41 5.41 0 0 1 0-3.42V4.96H.96a9 9 0 0 0 0 8.08l3-2.33Z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.43 1.35l2.59-2.59C13.46.88 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58Z"/></svg></span><span>Googleでログイン</span></button>
   </div>
 </div>
 
@@ -964,6 +965,7 @@ body.admin-loading .loading-screen{display:flex}
 <div class="modal-backdrop" id="modal"><div class="modal-box"><h3 id="modalTitle">確認</h3><p id="modalText">処理を実行しますか？</p><div id="modalContent"></div><div class="modal-actions"><button class="action" id="modalCancel">キャンセル</button><button class="action primary" id="modalOk">実行</button></div></div></div>
 <div class="toast" id="toast"><div class="toast-core"><div class="toast-mark">✓</div><div class="toast-title">完了しました</div></div></div>
 
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 const $=(q,root=document)=>root.querySelector(q);const $$=(q,root=document)=>[...root.querySelectorAll(q)];
 const pages={dashboard:['Dashboard','今日の状況'],attendance:['勤怠管理','月次勤怠'],applications:['申請管理','勤怠関連申請'],employees:['社員管理','社員情報'],workrules:['勤務設定','勤務パターン']};
@@ -976,10 +978,12 @@ const pages={dashboard:['Dashboard','今日の状況'],attendance:['勤怠管理
 const ADMIN_GAS_CONFIG={
   apiUrl:'https://script.google.com/macros/s/AKfycbwiV9vLacv8se1UVdGhhKuoWkSlsNReRJOUIgT494XUMBNUKBOxMhkzXLsvHRdCfWIt/exec', // GAS WebアプリURLを設定
   callbackPrefix:'nexusAdminCb',
-  timezone:'Asia/Tokyo'
+  timezone:'Asia/Tokyo',
+  googleClientId:'34622774291-c5kf0e7br87703eisj1k4leh4n6fdj0d.apps.googleusercontent.com' // Google OAuth Client ID
 };
 const ADMIN_GAS_ACTIONS={
   login:'adminLogin',
+  googleLogin:'adminGoogleLogin',
   dashboard:'getAdminDashboardData',
   attendanceMonthly:'getAdminAttendanceMonthly',
   applications:'getAdminApplications',
@@ -1315,6 +1319,7 @@ async function confirmApplication(id,nextStatus){const r=apps.find(x=>x.id===id)
 async function confirmAction(t,m){const ok=await modal(t,m,t);if(ok){closeDrawer();toast();}}
 function bind(){
  $('#adminLoginForm') && ($('#adminLoginForm').onsubmit=handleAdminLogin);
+ $('#googleLoginBtn') && ($('#googleLoginBtn').onclick=startGoogleAdminLogin);
  $('#adminLogoutBtn') && ($('#adminLogoutBtn').onclick=handleAdminLogout);
  $('#nav').addEventListener('click',e=>{const b=e.target.closest('button');if(b)switchView(b.dataset.view)});$$('[data-jump]').forEach(b=>b.onclick=()=>switchView(b.dataset.jump));
  $('#drawerClose').onclick=closeDrawer;$('#drawerBackdrop').onclick=closeDrawer;
@@ -1432,6 +1437,38 @@ async function handleAdminLogin(e){
   await loadAdminInitialData();
  }catch(ex){showAdminLogin(ex.message||'ログインに失敗しました。');}
  finally{if(btn){btn.disabled=false;btn.textContent='ログイン';}}
+}
+
+function getGoogleClientId(){return String(ADMIN_GAS_CONFIG.googleClientId||'').trim();}
+function startGoogleAdminLogin(){
+ const btn=$('#googleLoginBtn');
+ const clientId=getGoogleClientId();
+ if(!clientId){showAdminLogin('Google Client IDが未設定です。HTMLの ADMIN_GAS_CONFIG.googleClientId を設定してください。');return;}
+ if(!(window.google&&google.accounts&&google.accounts.id)){showAdminLogin('Googleログインの読み込み中です。少し待ってから再度お試しください。');return;}
+ if(btn)btn.disabled=true;
+ try{
+  google.accounts.id.initialize({client_id:clientId,callback:handleGoogleCredential,auto_select:false,cancel_on_tap_outside:true});
+  google.accounts.id.prompt((notification)=>{
+   if(notification&&notification.isNotDisplayed&&notification.isNotDisplayed()){
+    if(btn)btn.disabled=false;
+    showAdminLogin('Googleログイン画面を表示できませんでした。ブラウザ設定をご確認ください。');
+   }
+  });
+ }catch(err){if(btn)btn.disabled=false;showAdminLogin(err.message||'Googleログインを開始できませんでした。');}
+}
+async function handleGoogleCredential(response){
+ const btn=$('#googleLoginBtn');
+ if(btn)btn.disabled=true;
+ try{
+  const credential=response&&response.credential;
+  if(!credential)throw new Error('Google認証情報を取得できませんでした。');
+  const data=await adminApi(ADMIN_GAS_ACTIONS.googleLogin,{credential});
+  saveAdminSession({token:data.token,expiresAt:data.expiresAt,admin:data.admin});
+  clearAdminRuntimeData();
+  showAdminLoading('Please wait.');
+  await loadAdminInitialData();
+ }catch(ex){showAdminLogin(ex.message||'Googleログインに失敗しました。');}
+ finally{if(btn)btn.disabled=false;}
 }
 function handleAdminLogout(){clearAdminSession();clearAdminRuntimeData();render();showAdminLogin();}
 
