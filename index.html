@@ -1546,24 +1546,43 @@ async function loadAdminInitialData(options={}){
  if(!adminHasApi())return;
  if(!adminSession||!adminSession.token){showAdminLogin();return;}
  if(!silent)document.body.classList.add('admin-loading');
+ const requests=[
+  ['dashboard',adminApi(ADMIN_GAS_ACTIONS.dashboard)],
+  ['attendance',adminApi(ADMIN_GAS_ACTIONS.attendanceMonthly,{month:`${attCurrentYear}-${String(attCurrentMonth+1).padStart(2,'0')}`})],
+  ['applications',adminApi(ADMIN_GAS_ACTIONS.applications)],
+  ['employees',adminApi(ADMIN_GAS_ACTIONS.employees)],
+  ['workPatterns',adminApi(ADMIN_GAS_ACTIONS.workPatterns)]
+ ];
  try{
-  const [dash,att,app,emp,wp]=await Promise.all([
-   adminApi(ADMIN_GAS_ACTIONS.dashboard),
-   adminApi(ADMIN_GAS_ACTIONS.attendanceMonthly,{month:`${attCurrentYear}-${String(attCurrentMonth+1).padStart(2,'0')}`}),
-   adminApi(ADMIN_GAS_ACTIONS.applications),
-   adminApi(ADMIN_GAS_ACTIONS.employees),
-   adminApi(ADMIN_GAS_ACTIONS.workPatterns)
-  ]);
-  applyAdminDashboardData(dash);
-  applyAdminAttendanceData(att);
-  applyAdminApplicationsData(app);
-  applyAdminEmployeesData(emp);
-  applyAdminWorkPatternsData(wp);
+  const results=await Promise.allSettled(requests.map(x=>x[1]));
+  let authError=null;
+  results.forEach((result,i)=>{
+   const key=requests[i][0];
+   if(result.status==='rejected'){
+    const err=result.reason||new Error('GAS API error');
+    console.warn(`[NEXUS ONE Admin] ${key} load failed:`,err);
+    const msg=String(err.message||'');
+    if(msg.includes('認証')||msg.includes('期限')) authError=err;
+    return;
+   }
+   const data=result.value;
+   if(key==='dashboard')applyAdminDashboardData(data);
+   if(key==='attendance')applyAdminAttendanceData(data);
+   if(key==='applications')applyAdminApplicationsData(data);
+   if(key==='employees')applyAdminEmployeesData(data);
+   if(key==='workPatterns')applyAdminWorkPatternsData(data);
+  });
+  if(authError){clearAdminSession();showAdminLogin(authError.message);return;}
   render();
   updateDashboardClock();
   setUpdatedAtNow();
   if(!silent)showAdminApp();
- }catch(err){console.warn('[NEXUS ONE Admin] GAS load failed:',err); if(String(err.message||'').includes('認証')||String(err.message||'').includes('期限')){clearAdminSession();showAdminLogin(err.message);}}
+ }catch(err){
+  console.warn('[NEXUS ONE Admin] GAS load failed:',err);
+  const msg=String(err.message||'');
+  if(msg.includes('認証')||msg.includes('期限')){clearAdminSession();showAdminLogin(err.message);}
+  else{render(); if(!silent)showAdminApp();}
+ }
  finally{if(!silent)document.body.classList.remove('admin-loading');}
 }
 async function adminSyncApplicationStatus(id,nextStatus,comment){
