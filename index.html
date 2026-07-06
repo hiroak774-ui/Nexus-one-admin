@@ -986,7 +986,8 @@ const ADMIN_GAS_ACTIONS={
   updateEmployee:'updateAdminEmployee',
   updateWorkPattern:'updateAdminWorkPattern',
   sendAttendanceCheckRequest:'sendAdminAttendanceCheckRequest',
-  closeMonthlyAttendance:'closeMonthlyAttendance'
+  closeMonthlyAttendance:'closeMonthlyAttendance',
+  exportAttendancePdf:'exportAttendancePdf'
 };
 const ADMIN_GAS_SHEETS={
   employees:'従業員マスタ',
@@ -1023,14 +1024,29 @@ const ADMIN_GAS_FIELD_MAP={
 
 const todayRows=[];
 // DashboardはGAS実データ専用。未取得時はサンプルを表示しない。
-const attendance=[];
-
+const attendance=[
+ {id:'EMP-0001',name:'長谷部 浩章',companyId:'HRC',company:'HR COMPANY',type:'固定勤務',patternId:'WP002',pattern:'9-18',days:21,total:'168.0h',ot:'12.0h',late:0,early:0,corrections:1,leave:0,needs:0,gps:'取得',status:'正常',cls:'green',closed:'未締め',email:'hiro@example.com',paidUsed:2,paidRemain:8,paidExpire:0,notes:'月次確認済み。締め処理可能です。'},
+ {id:'EMP-0002',name:'シフト 花子',companyId:'HRC',company:'HR COMPANY',type:'シフト勤務',patternId:'WP003',pattern:'10-19',days:19,total:'151.5h',ot:'4.5h',late:1,early:0,corrections:2,leave:1,needs:3,gps:'取得',status:'要確認',cls:'orange',closed:'未締め',email:'shift@example.com',paidUsed:0,paidRemain:10,paidExpire:0,notes:'遅刻1件、打刻修正2件の確認が必要です。'},
+ {id:'EMP-0003',name:'田中 一郎',companyId:'ITC',company:'ITキャリアアップシステム',type:'固定勤務',patternId:'WP001',pattern:'8-17',days:20,total:'160.0h',ot:'8.0h',late:0,early:0,corrections:0,leave:0,needs:0,gps:'取得',status:'締め済',cls:'green',closed:'締め済',email:'tanaka@example.com',paidUsed:1,paidRemain:9,paidExpire:0,notes:'2026/07/03 09:20 に締め済み。'},
+ {id:'EMP-0004',name:'鈴木 未来',companyId:'HRC',company:'HR COMPANY',type:'固定勤務',patternId:'WP002',pattern:'9-18',days:17,total:'136.0h',ot:'0.0h',late:2,early:0,corrections:0,leave:3,needs:2,gps:'取得',status:'要確認',cls:'orange',closed:'未締め',email:'suzuki@example.com',paidUsed:3,paidRemain:7,paidExpire:0,notes:'遅刻2件の確認が必要です。'},
+ {id:'EMP-0005',name:'佐藤 蓮',companyId:'ITC',company:'ITキャリアアップシステム',type:'シフト勤務',patternId:'WP005',pattern:'日別シフトに準ずる',days:18,total:'144.0h',ot:'10.0h',late:0,early:1,corrections:1,leave:2,needs:2,gps:'未取得',status:'要確認',cls:'orange',closed:'未締め',email:'sato@example.com',paidUsed:2,paidRemain:8,paidExpire:1,notes:'位置情報未取得と早退確認があります。'}
+];
 let attCurrentYear=2026,attCurrentMonth=6,attFilter='all',attSearchQuery='';
-const attSendHistories={};
-const apps=[];
-
-const employees=[];
-
+const attSendHistories={'EMP-0002':[{date:'7/02',message:'打刻修正2件の確認を依頼しました。',status:'送信済'}],'EMP-0004':[{date:'7/01',message:'遅刻日の確認を依頼しました。',status:'対応済'}],'EMP-0005':[{date:'7/03',message:'位置情報未取得日の確認を依頼しました。',status:'送信済'}]};
+const apps=[
+ {id:'APP-0001',employeeId:'EMP-0001',name:'長谷部 浩章',companyId:'HRC',company:'HR COMPANY',type:'打刻修正',date:'2026-07-02',requested:'2026-07-03 12:18',body:'退勤時刻 未打刻 → 18:32',reason:'外出先から戻った後、退勤打刻を失念したため。実際の退勤時刻は18:32です。',related:'対象勤怠ID：ATD-0001 / 出勤 08:55 / 退勤 未打刻 / 勤務場所 本社',status:'再提出済み',cls:'blue',updated:'07/03',processed:'',adminComment:'退勤時刻の根拠を追記してください。',history:[['v1','2026/07/02 20:11','申請','退勤打刻の修正を申請'],['v1','2026/07/03 09:14','差戻し','退勤時刻の根拠が不足'],['v2','2026/07/03 12:18','再提出','業務チャットの終了時刻を追記']]},
+ {id:'APP-0002',employeeId:'EMP-0002',name:'シフト 花子',companyId:'HRC',company:'HR COMPANY',type:'休暇申請',date:'2026-07-10',requested:'2026-07-03 10:04',body:'有給休暇 / 私用のため',reason:'私用のため終日有給を取得します。',related:'有給残日数：10日 / 対象日：通常勤務予定',status:'承認待ち',cls:'violet',updated:'07/03',processed:'',adminComment:'',history:[['v1','2026/07/03 10:04','申請','有給休暇を申請']]},
+ {id:'APP-0003',employeeId:'EMP-0005',name:'佐藤 蓮',companyId:'ITC',company:'ITキャリアアップシステム',type:'残業申請',date:'2026-07-01',requested:'2026-07-02 18:40',body:'退勤予定 21:00 / 締切対応',reason:'顧客対応の締切が重なったため、21:00まで残業予定です。',related:'勤務予定：12:00-21:00 / 休憩 60分',status:'承認待ち',cls:'violet',updated:'07/02',processed:'',adminComment:'',history:[['v1','2026/07/02 18:40','申請','残業申請を提出']]},
+ {id:'APP-0004',employeeId:'EMP-0003',name:'田中 一郎',companyId:'ITC',company:'ITキャリアアップシステム',type:'残業申請',date:'2026-07-02',requested:'2026-07-03 08:55',body:'退勤予定 20:00 / 障害対応',reason:'システム障害の一次対応を継続したため。',related:'勤怠ログ：出勤 08:58 / 退勤 20:04',status:'承認待ち',cls:'violet',updated:'07/03',processed:'',adminComment:'',history:[['v1','2026/07/03 08:55','申請','残業申請を提出']]}
+];
+const employees=[
+ {id:'EMP-0001',number:'001',name:'長谷部 浩章',email:'hiro@example.com',companyId:'HRC',company:'HR COMPANY',roleId:'ADMIN',role:'管理者',employment:'在籍',registration:'承認済',account:'有効',type:'固定勤務',patternId:'WP002',pattern:'9-18',paidTotal:10,paidUsed:2,paidRemain:8,joined:'2024/04/01',approvedAt:'2024/04/01 09:12'},
+ {id:'EMP-0002',number:'002',name:'シフト 花子',email:'shift@example.com',companyId:'HRC',company:'HR COMPANY',roleId:'USER',role:'社員',employment:'在籍',registration:'承認済',account:'有効',type:'シフト勤務',patternId:'',pattern:'日別シフトに準ずる',paidTotal:10,paidUsed:0,paidRemain:10,joined:'2023/10/01',approvedAt:'2023/10/01 10:20'},
+ {id:'EMP-0003',number:'003',name:'田中 一郎',email:'tanaka@example.com',companyId:'ITC',company:'ITキャリアアップシステム',roleId:'USER',role:'社員',employment:'在籍',registration:'承認済',account:'有効',type:'固定勤務',patternId:'WP001',pattern:'8-17',paidTotal:10,paidUsed:1,paidRemain:9,joined:'2022/07/01',approvedAt:'2022/07/01 08:58'},
+ {id:'EMP-0004',number:'004',name:'鈴木 未来',email:'suzuki@example.com',companyId:'HRC',company:'HR COMPANY',roleId:'USER',role:'社員',employment:'在籍',registration:'承認済',account:'無効',type:'固定勤務',patternId:'WP002',pattern:'9-18',paidTotal:10,paidUsed:3,paidRemain:7,joined:'2024/11/01',approvedAt:'2024/11/01 12:35'},
+ {id:'EMP-0005',number:'005',name:'佐藤 蓮',email:'sato@example.com',companyId:'ITC',company:'ITキャリアアップシステム',roleId:'USER',role:'社員',employment:'在籍',registration:'承認済',account:'有効',type:'シフト勤務',patternId:'',pattern:'日別シフトに準ずる',paidTotal:10,paidUsed:2,paidRemain:8,joined:'2025/01/15',approvedAt:'2025/01/15 11:08'},
+ {id:'EMP-0006',number:'006',name:'退職 太郎',email:'retired@example.com',companyId:'HRC',company:'HR COMPANY',roleId:'USER',role:'社員',employment:'退職',registration:'承認済',account:'無効',type:'固定勤務',patternId:'WP002',pattern:'9-18',paidTotal:10,paidUsed:5,paidRemain:5,joined:'2023/04/01',approvedAt:'2023/04/01 09:20'}
+];
 let empCompanyFilter='all', empWorkFilter='all', empStatusFilter='all', empRoleFilter='all', empSearchQuery='', empSort='default';
 const rules=[
  {id:'WP001',name:'8-17',type:'固定勤務',start:'08:00',end:'17:00',break:'60分',users:4,status:'有効',cls:'green',late:'1分以上',early:'終業予定前',overtime:'8時間超過分'},
@@ -1053,8 +1069,7 @@ let appCurrentMonth=6;
 const appTypeList=['すべて','打刻修正','休暇申請','残業申請'];
 const appStatusList=['すべて','承認待ち','再提出済み','差戻し中','承認済み'];
 function appRequestMonth(r){const d=new Date(r.date+'T00:00:00');return d.getFullYear()===appCurrentYear&&d.getMonth()===appCurrentMonth;}
-function isCanceledApplication(r){return String(r?.status||'').includes('取消')}
-function appMonthly(){return apps.filter(r=>!isCanceledApplication(r)).filter(appRequestMonth)}
+function appMonthly(){return apps.filter(appRequestMonth)}
 function appFiltered(){const q=appSearchQuery.trim().toLowerCase();return appMonthly().filter(r=>(appTypeFilter==='すべて'||r.type===appTypeFilter)&&(appStatusFilter==='すべて'||r.status===appStatusFilter)&&(!q||(`${r.id} ${r.employeeId} ${r.name} ${r.type} ${r.body}`).toLowerCase().includes(q)))}
 function renderApplicationFilters(){
  const typeBox=$('#appTypeFilters'), statusBox=$('#appStatusFilters');
@@ -1105,94 +1120,46 @@ function issueBlock(e){const issues=attendanceIssues(e); if(!issues.length)retur
 function makeDailyRows(e){
  const lastDay=new Date(attCurrentYear,attCurrentMonth+1,0).getDate();
  const weekNames=['日','月','火','水','木','金','土'];
- const pad=n=>String(n).padStart(2,'0');
- const monthText=`${attCurrentYear}-${pad(attCurrentMonth+1)}`;
- const actualRows=Array.isArray(e.daily)?e.daily:[];
- const byDate={};
- actualRows.forEach(r=>{
-  const iso=normalizeIsoDateText(r.date||r.iso||'');
-  if(iso&&iso.indexOf(monthText)===0)byDate[iso]=r;
- });
- const relatedApps=(apps||[]).filter(a=>!isCanceledApplication(a)&&String(a.employeeId||'')===String(e.id||''));
  const rows=[];
+ const pad=n=>String(n).padStart(2,'0');
  for(let day=1;day<=lastDay;day++){
   const date=new Date(attCurrentYear,attCurrentMonth,day);
   const week=weekNames[date.getDay()];
-  const iso=`${monthText}-${pad(day)}`;
-  const src=byDate[iso];
-  const appLogs=relatedApps.filter(a=>normalizeIsoDateText(a.date||a.targetDate||'')===iso);
-  const todayIso = localIsoDateText_(new Date());
-  const isPastDate = iso < todayIso;
-  const isTodayDate = iso === todayIso;
-  const isFutureDate = iso > todayIso;
+  const isWeekend=date.getDay()===0||date.getDay()===6;
   let row={
    d:`${pad(attCurrentMonth+1)}/${pad(day)}(${week})`,
    dayOnly:pad(day),
-   iso,
+   iso:`${attCurrentYear}-${pad(attCurrentMonth+1)}-${pad(day)}`,
    week,
-   in:'--:--',
-   out:'--:--',
-   work:'-',
-   main:isPastDate?'休日':(isTodayDate?'未打刻':'-'),
-   tag:isPastDate?'blue':(isTodayDate?'orange':'gray'),
-   comment:isPastDate?'勤務実績なし':'',
-   logs:appLogs
+   in:isWeekend?'休日':'09:00',
+   out:isWeekend?'休日':'18:00',
+   work:isWeekend?'0.00h':'8.00h',
+   main:isWeekend?'休日':'通常',
+   tag:isWeekend?'blue':'green',
+   comment:isWeekend?'所定休日':''
   };
-  if(src){
-   const statusText=String(src.status||'').trim();
-   const inText=src.in||src.clockIn||'--:--';
-   const outText=src.out||src.clockOut||'--:--';
-   row.in=inText;
-   row.out=outText;
-   row.work=src.total||src.work||src.workTime||'-';
-   row.main=statusText||((inText&&inText!=='--:--')?(outText&&outText!=='--:--'?'正常':'勤務中'):'未打刻');
-   row.tag=attendanceDailyStatusClass_(row.main);
-   row.comment=src.comment||src.note||src.pattern||'';
-   row.place=src.place||src.locationName||'-';
-   row.scheduled=src.scheduled||'';
+  if(!isWeekend){
+   if(e.late>0 && day===1){row.in='09:08';row.work='7.87h';row.main='遅刻';row.tag='orange';row.comment='電車遅延により遅刻。'}
+   if(e.corrections>0 && day===2){row.out='18:32';row.work='8.53h';row.main='打刻修正';row.tag='blue';row.comment='退勤打刻修正済み。'}
+   if(e.early>0 && day===3){row.out='17:42';row.work='7.70h';row.main='早退';row.tag='orange';row.comment='早退申請承認済み。'}
+   if(e.gps==='未取得' && day===6){row.in='09:01';row.work='7.98h';row.main='位置情報未取得';row.tag='orange';row.comment='位置情報が取得できませんでした。'}
+   if(e.leave>0 && [7,14,21].includes(day) && e.leave >= [7,14,21].indexOf(day)+1){row.in='休暇';row.out='休暇';row.work='0.00h';row.main='休暇';row.tag='violet';row.comment='休暇申請承認済み。'}
+   if(e.ot!=='0.0h' && [10,17].includes(day)){row.out='19:12';row.work='9.20h';row.main='残業';row.tag='blue';row.comment='残業申請承認済み。'}
   }
   rows.push(row);
  }
  return rows;
-}
-function localIsoDateText_(d){
- const y=d.getFullYear();
- const m=String(d.getMonth()+1).padStart(2,'0');
- const day=String(d.getDate()).padStart(2,'0');
- return `${y}-${m}-${day}`;
-}
-function normalizeIsoDateText(v){
- const s=String(v||'').trim();
- if(!s)return '';
- const m=s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
- if(!m)return '';
- return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
-}
-function attendanceDailyStatusClass_(text){
- const s=String(text||'');
- if(s.includes('要確認')||s.includes('遅刻')||s.includes('早退')||s.includes('未取得')||s.includes('未打刻'))return 'orange';
- if(s.includes('休暇'))return 'violet';
- if(s.includes('休日'))return 'blue';
- return 'green';
 }
 function renderSendHistory(e){const hs=attSendHistories[e.id]||[]; return hs.length?`<div class="log-list">${hs.map(h=>`<div class="log-item"><div class="log-top"><span>${h.date}</span><span>${h.status}</span></div><div class="log-body"><strong>宛先：</strong>${h.to||e.email}<br>${h.message}</div></div>`).join('')}</div>`:'<div class="summary-note">対象者への確認依頼履歴はありません。</div>'}
 function openAttendanceDrawer(id,tab='overview'){
  const e=attendance.find(x=>x.id===id); if(!e)return;
  const daily=makeDailyRows(e);
  const overview=`<div class="detail-grid"><div class="detail-card"><div class="detail-label">勤務日数</div><div class="detail-value">${e.days}日</div></div><div class="detail-card"><div class="detail-label">総勤務</div><div class="detail-value">${e.total}</div></div><div class="detail-card"><div class="detail-label">残業</div><div class="detail-value">${e.ot}</div></div><div class="detail-card"><div class="detail-label">遅刻</div><div class="detail-value">${e.late}回</div></div><div class="detail-card"><div class="detail-label">早退</div><div class="detail-value">${e.early}回</div></div><div class="detail-card"><div class="detail-label">有給取得</div><div class="detail-value">${e.paidUsed}日</div></div><div class="detail-card"><div class="detail-label">有給残</div><div class="detail-value">${e.paidRemain}日</div></div><div class="detail-card"><div class="detail-label">状態</div><div class="detail-value">${e.status}</div></div></div>${issueBlock(e)}<div class="close-note">${e.notes}</div><div class="drawer-actions"><button class="action" onclick="openAttendanceExport('CSV','${e.id}')">個別CSV</button><button class="action" onclick="openAttendanceExport('PDF','${e.id}')">月次PDF</button><button class="action primary" onclick="closeAttendanceEmployee('${e.id}')">個別締め</button></div>`;
- const days=`<div class="daily-month-card"><div class="day-list-head"><span><strong>${attCurrentYear}年${String(attCurrentMonth+1).padStart(2,'0')}月</strong></span></div><div class="daily-table"><div class="daily-head"><div>日付</div><div>出勤</div><div>退勤</div><div>勤務</div><div>内容</div><div>状態</div></div><div class="daily-body">${daily.map((d,i)=>`<div class="day-row" onclick="openAttendanceDay('${e.id}',${i})"><div><strong>${d.d}</strong></div><div>${d.in}</div><div>${d.out}</div><div>${d.work}</div><div>${d.comment||'-'}</div><div>${status(d.tag,d.main)}</div></div>`).join('')}</div></div></div>`;
+ const days=`<div class="daily-month-card"><div class="day-list-head"><span><strong>${attCurrentYear}年${String(attCurrentMonth+1).padStart(2,'0')}月</strong></span></div><div class="daily-table"><div class="daily-head"><div>日付</div><div>出勤</div><div>退勤</div><div>勤務</div><div>内容</div><div>状態</div></div><div class="daily-body">${daily.map((d,i)=>`<div class="day-row" onclick="openAttendanceDay('${e.id}',${i})"><div><strong>${d.d}</strong></div><div>${d.in}</div><div>${d.out}</div><div>${d.work}</div><div>${d.comment||'通常勤務'}</div><div>${status(d.tag,d.main)}</div></div>`).join('')}</div></div></div>`;
  const requests=`<div class="request-history-stack"><div class="summary-note">対象者へ送信した確認依頼の履歴を確認できます。必要に応じて、勤怠確認メッセージを送信できます。</div>${renderSendHistory(e)}</div><div class="drawer-actions"><button class="action primary" onclick="requestAttendanceCheck('${e.id}')">対象者へ確認依頼</button></div>`;
  openDrawer(e.name,`${attCurrentYear}年${attCurrentMonth+1}月 / ${e.company}`,`<div class="workspace-tabs"><button class="workspace-tab ${tab==='overview'?'active':''}" onclick="openAttendanceDrawer('${e.id}','overview')">概要</button><button class="workspace-tab ${tab==='days'?'active':''}" onclick="openAttendanceDrawer('${e.id}','days')">日別勤怠</button><button class="workspace-tab ${tab==='requests'?'active':''}" onclick="openAttendanceDrawer('${e.id}','requests')">確認依頼</button></div><div class="workspace-section ${tab==='overview'?'active':''}">${overview}</div><div class="workspace-section ${tab==='days'?'active':''}">${days}</div><div class="workspace-section ${tab==='requests'?'active':''}">${requests}</div>`);
 }
-function openAttendanceDay(id,index){
- const e=attendance.find(x=>x.id===id); if(!e)return;
- const d=makeDailyRows(e)[index];
- const logs=Array.isArray(d.logs)?d.logs:[];
- const logHtml=logs.length
-  ? logs.map(a=>`<div class="log-line"><div class="log-label">${a.type||'申請'}</div><div class="log-value">${a.body||a.reason||'申請内容なし'}<br><small>${a.status||''}${a.requested?` / ${a.requested}`:''}</small></div></div>`).join('')
-  : `<div class="log-line"><div class="log-label">状態</div><div class="log-value">この日に紐づく申請ログはありません。</div></div>`;
- openDrawer(`${e.name} / ${d.d}`,`日別勤怠詳細`, `<button class="back-link" onclick="openAttendanceDrawer('${e.id}','days')">← 日別勤怠へ戻る</button><div class="detail-grid"><div class="detail-card"><div class="detail-label">出勤</div><div class="detail-value">${d.in}</div></div><div class="detail-card"><div class="detail-label">退勤</div><div class="detail-value">${d.out}</div></div><div class="detail-card"><div class="detail-label">勤務</div><div class="detail-value">${d.work}</div></div><div class="detail-card"><div class="detail-label">状態</div><div class="detail-value">${d.main}</div></div></div><div class="log-box"><div class="log-title">申請・承認ログ</div>${logHtml}</div><div class="drawer-actions"><button class="action primary" onclick="requestAttendanceCheck('${e.id}','${d.d}')">この日の確認を依頼</button></div>`)
-}
+function openAttendanceDay(id,index){const e=attendance.find(x=>x.id===id); if(!e)return; const d=makeDailyRows(e)[index]; const hasLog=d.comment; openDrawer(`${e.name} / ${d.d}`,`日別勤怠詳細`, `<button class="back-link" onclick="openAttendanceDrawer('${e.id}','days')">← 日別勤怠へ戻る</button><div class="detail-grid"><div class="detail-card"><div class="detail-label">出勤</div><div class="detail-value">${d.in}</div></div><div class="detail-card"><div class="detail-label">退勤</div><div class="detail-value">${d.out}</div></div><div class="detail-card"><div class="detail-label">勤務</div><div class="detail-value">${d.work}</div></div><div class="detail-card"><div class="detail-label">状態</div><div class="detail-value">${d.main}</div></div></div><div class="log-box"><div class="log-title">申請・承認ログ</div>${hasLog?`<div class="log-line"><div class="log-label">内容</div><div class="log-value">${d.comment}</div></div><div class="log-line"><div class="log-label">承認日時</div><div class="log-value">${attCurrentYear}/${String(attCurrentMonth+1).padStart(2,'0')}/${String(index+1).padStart(2,'0')} 10:02</div></div><div class="log-line"><div class="log-label">管理者</div><div class="log-value">長谷部 浩章</div></div>`:`<div class="log-line"><div class="log-label">状態</div><div class="log-value">この日に紐づく申請ログはありません。</div></div>`}</div><div class="drawer-actions"><button class="action primary" onclick="requestAttendanceCheck('${e.id}','${d.d}')">この日の確認を依頼</button></div>`)}
 function confirmAttendanceIssue(id,name){const e=attendance.find(x=>x.id===id); if(!e)return; e.needs=Math.max(0,e.needs-1); if(e.needs===0&&e.status==='要確認'){e.status='正常';e.cls='green'} renderAttendanceRows(); openAttendanceDrawer(id,'overview');}
 function requestAttendanceCheck(id,dayLabel='月次勤怠'){
  const e=attendance.find(x=>x.id===id); if(!e)return;
@@ -1219,7 +1186,46 @@ function requestAttendanceCheck(id,dayLabel='月次勤怠'){
  })
 }
 function closeAttendanceEmployee(id){const e=attendance.find(x=>x.id===id); if(!e)return; if(e.status==='締め済'){modal('締め済です',`${e.name} さんの勤怠はすでに締め済です。`,'確認');return;} const msg=e.status==='要確認'?`${e.name} さんには要確認項目があります。内容を確認したうえで締めますか？`:`${e.name} さんの月次勤怠を締めますか？`;modal('個別勤怠締め',msg,'締める').then(ok=>{if(ok){e.status='締め済';e.cls='green';e.closed='締め済';if(adminHasApi())adminSyncCloseMonthly(e).catch(console.warn);renderAttendanceRows();toast();openAttendanceDrawer(id,'overview')}})}
-function openAttendanceExport(type,id){const e=id?attendance.find(x=>x.id===id):null; const name=e?e.name:'全社員'; const content=`<div class="pdf-preview"><h3>${type}出力プレビュー</h3><div class="pdf-sub">対象：${name}<br>対象月：${attCurrentYear}年${attCurrentMonth+1}月</div><div class="pdf-grid"><div class="pdf-cell"><div class="pdf-label">勤務日数</div><div class="pdf-val">${e?e.days+'日':'全件'}</div></div><div class="pdf-cell"><div class="pdf-label">勤務時間</div><div class="pdf-val">${e?e.total:'月次一覧'}</div></div><div class="pdf-cell"><div class="pdf-label">残業</div><div class="pdf-val">${e?e.ot:'集計'}</div></div></div><div class="summary-note">${type==='PDF'?'PDFには月次サマリーと日別勤怠のみを出力します。申請コメントや内部メモは含めません。':'CSVには月次一覧・日別勤怠・締め状態を出力します。'}</div></div>`; modal(`${type}出力`,`${name}の勤怠データを${type}形式で出力します。`,'出力',content).then(ok=>{if(ok)toast()});}
+function openAttendanceExport(type,id){
+ const e=id?attendance.find(x=>x.id===id):null;
+ const name=e?e.name:'全社員';
+ if(type==='PDF'){
+  if(!e){modal('PDF出力', '個別PDFは、勤怠管理で社員をクリックしてから「月次PDF」ボタンで出力してください。', '確認');return;}
+  const monthLabel=`${attCurrentYear}年${String(attCurrentMonth+1).padStart(2,'0')}月分`;
+  const content=`<div class="pdf-preview"><h3>勤怠報告書 PDF</h3><div class="pdf-sub">対象：${name}<br>対象月：${monthLabel}<br>ファイル名：勤怠報告書_${monthLabel}_${name}.pdf</div><div class="pdf-grid"><div class="pdf-cell"><div class="pdf-label">出勤日数</div><div class="pdf-val">${e.days}日</div></div><div class="pdf-cell"><div class="pdf-label">労働時間</div><div class="pdf-val">${e.total}</div></div><div class="pdf-cell"><div class="pdf-label">残業</div><div class="pdf-val">${e.ot}</div></div></div><div class="summary-note">PDFには、対象期間・氏名・作成日・サマリー・日別勤怠明細のみを出力します。申請・承認履歴、内部メモ、NEXUS ONE名称は含めません。</div></div>`;
+  modal('PDF出力',`${name} さんの勤怠報告書をPDF形式で出力します。`,'PDF出力',content).then(async ok=>{if(!ok)return;await adminExportAttendancePdf(e);});
+  return;
+ }
+ const content=`<div class="pdf-preview"><h3>${type}出力プレビュー</h3><div class="pdf-sub">対象：${name}<br>対象月：${attCurrentYear}年${attCurrentMonth+1}月</div><div class="pdf-grid"><div class="pdf-cell"><div class="pdf-label">勤務日数</div><div class="pdf-val">${e?e.days+'日':'全件'}</div></div><div class="pdf-cell"><div class="pdf-label">勤務時間</div><div class="pdf-val">${e?e.total:'月次一覧'}</div></div><div class="pdf-cell"><div class="pdf-label">残業</div><div class="pdf-val">${e?e.ot:'集計'}</div></div></div><div class="summary-note">CSVには月次一覧・日別勤怠・締め状態を出力します。</div></div>`;
+ modal(`${type}出力`,`${name}の勤怠データを${type}形式で出力します。`,'出力',content).then(ok=>{if(ok)toast()});
+}
+async function adminExportAttendancePdf(e){
+ if(!e)return;
+ if(!adminHasApi()){modal('PDF出力できません','GAS API URLが未設定です。','確認');return;}
+ try{
+  toast('PDFを作成しています');
+  const month=`${attCurrentYear}-${String(attCurrentMonth+1).padStart(2,'0')}`;
+  const res=await adminApi(ADMIN_GAS_ACTIONS.exportAttendancePdf,{employeeId:e.id,month});
+  if(!res||!res.base64)throw new Error('PDFデータが取得できませんでした。');
+  downloadBase64File(res.base64,res.mimeType||'application/pdf',res.fileName||`勤怠報告書_${month}_${e.name}.pdf`);
+  toast('PDFを出力しました');
+ }catch(err){console.warn('[NEXUS ONE Admin] PDF export failed:',err);modal('PDF出力に失敗しました',err.message||String(err),'確認');}
+}
+function downloadBase64File(base64,mimeType,fileName){
+ const bin=atob(base64);
+ const len=bin.length;
+ const bytes=new Uint8Array(len);
+ for(let i=0;i<len;i++)bytes[i]=bin.charCodeAt(i);
+ const blob=new Blob([bytes],{type:mimeType||'application/octet-stream'});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement('a');
+ a.href=url;
+ a.download=fileName||'download.pdf';
+ document.body.appendChild(a);
+ a.click();
+ a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1200);
+}
 function closeMonthlyAttendance(){const normal=attendance.filter(e=>e.status==='正常'&&e.closed!=='締め済');modal('一括締め',`正常な社員 ${normal.length}名の勤怠を締めます。要確認の社員は除外します。`,'一括締め').then(ok=>{if(ok){normal.forEach(e=>{e.status='締め済';e.cls='green';e.closed='締め済';if(adminHasApi())adminSyncCloseMonthly(e).catch(console.warn)});attFilter='needs';$$('[data-att-filter]').forEach(b=>b.classList.toggle('active',b.dataset.attFilter==='needs'));renderAttendanceRows();toast();}})}
 function renderApplicationSummary(){const m=appMonthly();const count=s=>m.filter(r=>r.status===s).length; if($('#appPendingCount')){$('#appPendingCount').textContent=count('承認待ち');$('#appApprovedCount').textContent=count('承認済み');$('#appReturnedCount').textContent=count('差戻し中');$('#appResubmittedCount').textContent=count('再提出済み');} const label=$('#appMonthLabel'); if(label) label.textContent=`${appCurrentYear}.${String(appCurrentMonth+1).padStart(2,'0')}`;}
 function renderApplicationRows(){
@@ -1244,39 +1250,16 @@ function dashboardFiltered(){
  return rows;
 }
 
-
-function isBadEmployeePatternText(v){
- const text=String(v||'').trim();
- if(!text)return true;
- if(/^\d+(\.\d+)?$/.test(text))return true;
- if(/^\d{4}-\d{2}-\d{2}T/.test(text))return true;
- if(/^\d{4}[\/-]\d{1,2}[\/-]\d{1,2}/.test(text))return true;
- return false;
-}
-function workPatternNameById(id){
- const key=String(id||'').trim();
- if(!key)return '';
- const r=rules.find(x=>String(x.id||'').trim()===key);
- if(!r)return '';
- return String(r.name||'').trim() || [r.start,r.end].filter(Boolean).join('-');
-}
-function employeePatternLabel(e){
- if(!e)return '-';
- if(e.type==='シフト勤務')return '日別シフトに準ずる';
- const raw=String(e.pattern||e.workPattern||'').trim();
- if(raw&&!isBadEmployeePatternText(raw))return raw;
- return workPatternNameById(e.patternId)||String(e.patternId||'').trim()||'-';
-}
 function empVisibleBase(){return employees.filter(e=>e.registration==='承認済'&&e.employment==='在籍')}
 function empStatusLabel(e){return e.account==='有効'?'利用中':'停止中'}
 function empStatusClass(e){return e.account==='有効'?'green':'orange'}
 function renderEmployeeSummary(){const base=empVisibleBase(); const byId=(id,val)=>{const el=$(id); if(el)el.textContent=val}; byId('#empActiveCount',base.length); byId('#empEnabledCount',base.filter(e=>e.account==='有効').length); byId('#empStoppedCount',base.filter(e=>e.account==='無効').length); byId('#empShiftCount',base.filter(e=>e.type==='シフト勤務').length);}
 function renderEmployeeFilters(){const sel=$('#empCompanyFilter'); if(sel&&!sel.dataset.ready){const companies=[...new Set(empVisibleBase().map(e=>e.company))]; sel.innerHTML='<option value="all">すべて</option>'+companies.map(c=>`<option value="${c}">${c}</option>`).join(''); sel.dataset.ready='1';}}
-function employeeFiltered(){let rows=empVisibleBase(); const q=empSearchQuery.trim().toLowerCase(); if(empCompanyFilter!=='all')rows=rows.filter(e=>e.company===empCompanyFilter); if(empWorkFilter!=='all')rows=rows.filter(e=>e.type===empWorkFilter); if(empStatusFilter!=='all')rows=rows.filter(e=>e.account===empStatusFilter); if(empRoleFilter!=='all')rows=rows.filter(e=>e.role===empRoleFilter); if(q)rows=rows.filter(e=>`${e.id} ${e.number} ${e.name} ${e.email} ${e.company} ${e.companyId} ${e.role} ${e.type} ${employeePatternLabel(e)} ${empStatusLabel(e)}`.toLowerCase().includes(q)); const statusRank={'有効':0,'無効':1}; if(empSort==='name')rows.sort((a,b)=>a.name.localeCompare(b.name,'ja')); if(empSort==='company')rows.sort((a,b)=>a.company.localeCompare(b.company,'ja')||a.name.localeCompare(b.name,'ja')); if(empSort==='joined')rows.sort((a,b)=>a.joined.localeCompare(b.joined)); if(empSort==='status')rows.sort((a,b)=>(statusRank[a.account]??9)-(statusRank[b.account]??9)||a.name.localeCompare(b.name,'ja')); return rows;}
-function renderEmployeeRows(){renderEmployeeSummary(); renderEmployeeFilters(); const box=$('#employeeRows'); if(!box)return; const rows=employeeFiltered(); box.innerHTML=rows.map(e=>`<div class="trow cols-emp-v31" data-kind="employee" data-id="${e.id}"><div class="cell"><strong>${e.name}</strong><small>${e.id} / ${e.email}</small></div><div class="cell"><strong>${e.companyId}</strong><small>${e.company}</small></div><div class="cell"><span class="emp-pill ${e.role==='管理者'?'blue':''}">${e.role}</span></div><div class="cell">${status(e.type==='シフト勤務'?'violet':'blue',e.type)}</div><div class="cell">${employeePatternLabel(e)}</div><div class="cell">${status(empStatusClass(e),empStatusLabel(e))}</div><div class="cell">${e.joined}</div></div>`).join('')||'<div class="empty">条件に一致する社員はありません。</div>';}
-function employeeDetailHtml(e){return `<div class="drawer-section"><h4>基本情報</h4>${detailCards([['社員ID',e.id],['社員番号',e.number],['氏名',e.name],['メールアドレス',e.email],['所属会社',e.company],['権限',e.role]])}</div><div class="drawer-section"><h4>勤務設定</h4>${detailCards([['勤務方式',e.type],['基本勤務',employeePatternLabel(e)],['有給付与',e.paidTotal+'日'],['有給使用',e.paidUsed+'日'],['有給残日数',e.paidRemain+'日'],['入社日',e.joined]])}</div><div class="drawer-section"><h4>アカウント状態</h4>${detailCards([['登録ステータス',e.registration],['在籍ステータス',e.employment],['利用ステータス',empStatusLabel(e)],['承認日時',e.approvedAt||'-']])}<div class="drawer-actions"><button class="action primary" onclick="openEmployeeEdit('${e.id}')">編集する</button><button class="action ${e.account==='有効'?'danger':''}" onclick="toggleEmployeeAccount('${e.id}')">${e.account==='有効'?'利用停止':'利用再開'}</button></div></div>`}
+function employeeFiltered(){let rows=empVisibleBase(); const q=empSearchQuery.trim().toLowerCase(); if(empCompanyFilter!=='all')rows=rows.filter(e=>e.company===empCompanyFilter); if(empWorkFilter!=='all')rows=rows.filter(e=>e.type===empWorkFilter); if(empStatusFilter!=='all')rows=rows.filter(e=>e.account===empStatusFilter); if(empRoleFilter!=='all')rows=rows.filter(e=>e.role===empRoleFilter); if(q)rows=rows.filter(e=>`${e.id} ${e.number} ${e.name} ${e.email} ${e.company} ${e.companyId} ${e.role} ${e.type} ${e.pattern} ${empStatusLabel(e)}`.toLowerCase().includes(q)); const statusRank={'有効':0,'無効':1}; if(empSort==='name')rows.sort((a,b)=>a.name.localeCompare(b.name,'ja')); if(empSort==='company')rows.sort((a,b)=>a.company.localeCompare(b.company,'ja')||a.name.localeCompare(b.name,'ja')); if(empSort==='joined')rows.sort((a,b)=>a.joined.localeCompare(b.joined)); if(empSort==='status')rows.sort((a,b)=>(statusRank[a.account]??9)-(statusRank[b.account]??9)||a.name.localeCompare(b.name,'ja')); return rows;}
+function renderEmployeeRows(){renderEmployeeSummary(); renderEmployeeFilters(); const box=$('#employeeRows'); if(!box)return; const rows=employeeFiltered(); box.innerHTML=rows.map(e=>`<div class="trow cols-emp-v31" data-kind="employee" data-id="${e.id}"><div class="cell"><strong>${e.name}</strong><small>${e.id} / ${e.email}</small></div><div class="cell"><strong>${e.companyId}</strong><small>${e.company}</small></div><div class="cell"><span class="emp-pill ${e.role==='管理者'?'blue':''}">${e.role}</span></div><div class="cell">${status(e.type==='シフト勤務'?'violet':'blue',e.type)}</div><div class="cell">${e.pattern}</div><div class="cell">${status(empStatusClass(e),empStatusLabel(e))}</div><div class="cell">${e.joined}</div></div>`).join('')||'<div class="empty">条件に一致する社員はありません。</div>';}
+function employeeDetailHtml(e){return `<div class="drawer-section"><h4>基本情報</h4>${detailCards([['社員ID',e.id],['社員番号',e.number],['氏名',e.name],['メールアドレス',e.email],['所属会社',e.company],['権限',e.role]])}</div><div class="drawer-section"><h4>勤務設定</h4>${detailCards([['勤務方式',e.type],['基本勤務',e.pattern],['有給付与',e.paidTotal+'日'],['有給使用',e.paidUsed+'日'],['有給残日数',e.paidRemain+'日'],['入社日',e.joined]])}</div><div class="drawer-section"><h4>アカウント状態</h4>${detailCards([['登録ステータス',e.registration],['在籍ステータス',e.employment],['利用ステータス',empStatusLabel(e)],['承認日時',e.approvedAt||'-']])}<div class="drawer-actions"><button class="action primary" onclick="openEmployeeEdit('${e.id}')">編集する</button><button class="action ${e.account==='有効'?'danger':''}" onclick="toggleEmployeeAccount('${e.id}')">${e.account==='有効'?'利用停止':'利用再開'}</button></div></div>`}
 function openEmployeeDetail(id){const e=employees.find(x=>x.id===id); if(!e)return; openDrawer(e.name,`${e.id} / ${empStatusLabel(e)}`,employeeDetailHtml(e));}
-function openEmployeeEdit(id){const e=employees.find(x=>x.id===id); if(!e)return; openDrawer(`${e.name} / 編集`,`${e.id} / 従業員マスタ`, `<div class="drawer-section"><h4>基本情報</h4><div class="emp-field-grid"><div class="field"><label>氏名</label><input id="editEmpName" value="${e.name}"></div><div class="field"><label>Googleメールアドレス</label><input id="editEmpEmail" value="${e.email}"></div><div class="field"><label>所属会社</label><select id="editEmpCompany"><option value="HRC" ${e.companyId==='HRC'?'selected':''}>HR COMPANY</option><option value="ITC" ${e.companyId==='ITC'?'selected':''}>ITキャリアアップシステム</option></select></div><div class="field"><label>権限</label><select id="editEmpRole"><option value="ADMIN" ${e.roleId==='ADMIN'?'selected':''}>管理者</option><option value="USER" ${e.roleId==='USER'?'selected':''}>社員</option></select></div><div class="field"><label>入社日</label><input id="editEmpJoined" value="${e.joined}"></div><div class="field"><label>アカウント状態</label><select id="editEmpAccount"><option value="有効" ${e.account==='有効'?'selected':''}>利用中</option><option value="無効" ${e.account==='無効'?'selected':''}>停止中</option></select></div></div></div><div class="drawer-section"><h4>勤務設定</h4><div class="emp-field-grid"><div class="field"><label>勤務方式</label><select id="editEmpType"><option ${e.type==='固定勤務'?'selected':''}>固定勤務</option><option ${e.type==='シフト勤務'?'selected':''}>シフト勤務</option></select></div><div class="field"><label>基本勤務パターン</label><select id="editEmpPattern"><option ${employeePatternLabel(e)==='8-17'?'selected':''}>8-17</option><option ${employeePatternLabel(e)==='9-18'?'selected':''}>9-18</option><option ${employeePatternLabel(e)==='10-19'?'selected':''}>10-19</option><option ${employeePatternLabel(e)==='12-21'?'selected':''}>12-21</option><option ${employeePatternLabel(e)==='日別シフトに準ずる'?'selected':''}>日別シフトに準ずる</option></select></div><div class="field"><label>有給付与</label><input id="editEmpPaidTotal" value="${e.paidTotal}"></div><div class="field"><label>有給使用</label><input id="editEmpPaidUsed" value="${e.paidUsed}"></div></div><div class="drawer-actions"><button class="action" onclick="openEmployeeDetail('${e.id}')">キャンセル</button><button class="action primary" onclick="saveEmployee('${e.id}')">保存する</button></div><button class="emp-danger-link" onclick="retireEmployee('${e.id}')">退職扱いにする</button></div>`);}
+function openEmployeeEdit(id){const e=employees.find(x=>x.id===id); if(!e)return; openDrawer(`${e.name} / 編集`,`${e.id} / 従業員マスタ`, `<div class="drawer-section"><h4>基本情報</h4><div class="emp-field-grid"><div class="field"><label>氏名</label><input id="editEmpName" value="${e.name}"></div><div class="field"><label>Googleメールアドレス</label><input id="editEmpEmail" value="${e.email}"></div><div class="field"><label>所属会社</label><select id="editEmpCompany"><option value="HRC" ${e.companyId==='HRC'?'selected':''}>HR COMPANY</option><option value="ITC" ${e.companyId==='ITC'?'selected':''}>ITキャリアアップシステム</option></select></div><div class="field"><label>権限</label><select id="editEmpRole"><option value="ADMIN" ${e.roleId==='ADMIN'?'selected':''}>管理者</option><option value="USER" ${e.roleId==='USER'?'selected':''}>社員</option></select></div><div class="field"><label>入社日</label><input id="editEmpJoined" value="${e.joined}"></div><div class="field"><label>アカウント状態</label><select id="editEmpAccount"><option value="有効" ${e.account==='有効'?'selected':''}>利用中</option><option value="無効" ${e.account==='無効'?'selected':''}>停止中</option></select></div></div></div><div class="drawer-section"><h4>勤務設定</h4><div class="emp-field-grid"><div class="field"><label>勤務方式</label><select id="editEmpType"><option ${e.type==='固定勤務'?'selected':''}>固定勤務</option><option ${e.type==='シフト勤務'?'selected':''}>シフト勤務</option></select></div><div class="field"><label>基本勤務パターン</label><select id="editEmpPattern"><option ${e.pattern==='8-17'?'selected':''}>8-17</option><option ${e.pattern==='9-18'?'selected':''}>9-18</option><option ${e.pattern==='10-19'?'selected':''}>10-19</option><option ${e.pattern==='12-21'?'selected':''}>12-21</option><option ${e.pattern==='日別シフトに準ずる'?'selected':''}>日別シフトに準ずる</option></select></div><div class="field"><label>有給付与</label><input id="editEmpPaidTotal" value="${e.paidTotal}"></div><div class="field"><label>有給使用</label><input id="editEmpPaidUsed" value="${e.paidUsed}"></div></div><div class="drawer-actions"><button class="action" onclick="openEmployeeDetail('${e.id}')">キャンセル</button><button class="action primary" onclick="saveEmployee('${e.id}')">保存する</button></div><button class="emp-danger-link" onclick="retireEmployee('${e.id}')">退職扱いにする</button></div>`);}
 async function saveEmployee(id){const e=employees.find(x=>x.id===id); if(!e)return; const ok=await modal('社員情報を保存しますか','従業員マスタの該当行を更新します。','保存'); if(!ok)return; const companyMap={HRC:'HR COMPANY',ITC:'ITキャリアアップシステム'}; e.name=$('#editEmpName').value.trim(); e.email=$('#editEmpEmail').value.trim(); e.companyId=$('#editEmpCompany').value; e.company=companyMap[e.companyId]; e.roleId=$('#editEmpRole').value; e.role=e.roleId==='ADMIN'?'管理者':'社員'; e.joined=$('#editEmpJoined').value.trim(); e.account=$('#editEmpAccount').value; e.type=$('#editEmpType').value; e.pattern=$('#editEmpPattern').value; e.paidTotal=Number($('#editEmpPaidTotal').value)||0; e.paidUsed=Number($('#editEmpPaidUsed').value)||0; e.paidRemain=Math.max(0,e.paidTotal-e.paidUsed); if(adminHasApi())adminSyncEmployee(e).catch(console.warn); renderEmployeeRows(); openEmployeeDetail(id); toast();}
 async function toggleEmployeeAccount(id){const e=employees.find(x=>x.id===id); if(!e)return; const next=e.account==='有効'?'無効':'有効'; const ok=await modal(next==='無効'?'利用を停止しますか':'利用を再開しますか',`${e.name} さんのアカウント状態を「${next==='有効'?'利用中':'停止中'}」に変更します。`,'実行'); if(!ok)return; e.account=next; renderEmployeeRows(); openEmployeeDetail(id); toast();}
 async function retireEmployee(id){const e=employees.find(x=>x.id===id); if(!e)return; const ok=await modal('退職扱いにしますか',`${e.name} さんを社員管理の一覧から非表示にします。過去の勤怠・申請履歴は保持します。`,'退職扱い'); if(!ok)return; e.employment='退職'; e.account='無効'; renderEmployeeRows(); closeDrawer(); toast();}
@@ -1354,12 +1337,7 @@ function render(){
  renderApplicationRows();
  renderEmployeeRows();
  renderRuleRows();
- const visibleTimeline=timeline.filter(t=>{
-  const kind=Array.isArray(t)?t[0]:(t.kind||t.type||'管理');
-  const text=Array.isArray(t)?t[2]:(t.text||t.body||t.action||'');
-  return !(kind==='申請' && String(text).includes('取消'));
- });
- $('#timelineList').innerHTML=visibleTimeline.map(t=>{
+ $('#timelineList').innerHTML=timeline.map(t=>{
   const kind=Array.isArray(t)?t[0]:(t.kind||t.type||'管理');
   const name=Array.isArray(t)?t[1]:(t.name||t.employeeName||'-');
   const text=Array.isArray(t)?t[2]:(t.text||t.body||t.action||'');
@@ -1376,7 +1354,7 @@ function toast(){const t=$('#toast');t.classList.add('show');setTimeout(()=>t.cl
 function detailCards(items){return `<div class="detail-grid">${items.map(([l,v])=>`<div class="detail-card"><div class="detail-label">${l}</div><div class="detail-value">${v}</div></div>`).join('')}</div>`}
 function bindRows(){document.body.addEventListener('click',async e=>{const row=e.target.closest('.trow');if(!row)return;const kind=row.dataset.kind;if(kind==='today'){const r=todayRows.find(x=>x.id===row.dataset.id);openDrawer(r.name,'今日の勤務状況',`<div class="drawer-section"><h4>基本情報</h4>${detailCards([['社員ID',r.id],['所属会社',r.company],['勤務方式',r.type],['基本パターン',r.pattern],['出勤',r.in],['退勤',r.out]])}</div><div class="drawer-section"><h4>状態</h4><div class="note">${r.status} / 勤務場所：${r.place}</div><div class="drawer-actions"><button class="action" onclick="switchView('attendance');closeDrawer();">勤怠管理で見る</button></div></div>`)}
  if(kind==='attendance'){const r=attendance.find(x=>x.id===row.dataset.id);if(r)openAttendanceDrawer(r.id)}
- if(kind==='application'){const r=apps.find(x=>x.id===row.dataset.id);const canOperate=['承認待ち','再提出済み'].includes(r.status);const processed=r.status==='承認済み'?`<div class="drawer-section"><h4>処理内容</h4>${detailCards([['処理状態','承認済み'],['処理日時',r.processed||'-'],['管理者','長谷部 浩章']])}<div class="log-body">管理者コメント：${r.adminComment||'—'}</div></div>`:'';const returned=r.status==='差戻し中'?`<div class="drawer-section"><h4>差戻し内容</h4>${detailCards([['状態','再提出待ち'],['差戻し日時',r.processed||'-'],['管理者','長谷部 浩章']])}<div class="log-body">差戻し理由：${r.adminComment||'—'}</div></div>`:'';const actions=canOperate?`<div class="drawer-section"><h4>管理者コメント</h4><div class="field"><label>承認・差戻し時に残すコメント</label><textarea id="appAdminComment" placeholder="例：内容を確認しました。 / 根拠資料を追記してください。">${r.status==='再提出済み'?'再提出内容を確認しました。':''}</textarea></div><div class="drawer-actions"><button class="action danger" onclick="confirmApplication('${r.id}','差戻し中')">差戻し</button><button class="action primary" onclick="confirmApplication('${r.id}','承認済み')">承認</button></div></div>`:'';openDrawer(`${r.name} / ${r.type}`,`${r.id} / ${r.status}`,`<div class="drawer-section"><h4>申請内容</h4><div class="app-meta-strip"><div class="app-meta-item"><b>${r.company}</b><span>所属会社</span></div><div class="app-meta-item"><b>${r.target||r.date}</b><span>対象日</span></div><div class="app-meta-item"><b>${r.requested}</b><span>申請日</span></div><div class="app-meta-item"><b>${r.status}</b><span>ステータス</span></div></div><div class="log-title">申請内容</div><div class="log-body">${r.body||'—'}</div><div class="log-title">本人コメント</div><div class="log-body">${r.reason||'—'}</div><div class="log-title">関連データ</div><div class="log-body">${r.related}</div></div>${processed}${returned}${actions}<div class="drawer-section"><h4>申請履歴</h4><div class="log-list">${r.history.map(h=>`<div class="log-item"><div class="log-top"><span>${h[0]} / ${h[2]}</span><span>${h[1]}</span></div><div class="log-body">${h[3]}</div></div>`).join('')}</div></div>`)}
+ if(kind==='application'){const r=apps.find(x=>x.id===row.dataset.id);const canOperate=['承認待ち','再提出済み'].includes(r.status);const processed=r.status==='承認済み'?`<div class="drawer-section"><h4>処理内容</h4>${detailCards([['処理状態','承認済み'],['処理日時',r.processed||'-'],['管理者','長谷部 浩章']])}<div class="log-body">管理者コメント：${r.adminComment||'—'}</div></div>`:'';const returned=r.status==='差戻し中'?`<div class="drawer-section"><h4>差戻し内容</h4>${detailCards([['状態','再提出待ち'],['差戻し日時',r.processed||'-'],['管理者','長谷部 浩章']])}<div class="log-body">差戻し理由：${r.adminComment||'—'}</div></div>`:'';const actions=canOperate?`<div class="drawer-section"><h4>管理者コメント</h4><div class="field"><label>承認・差戻し時に残すコメント</label><textarea id="appAdminComment" placeholder="例：内容を確認しました。 / 根拠資料を追記してください。">${r.status==='再提出済み'?'再提出内容を確認しました。':''}</textarea></div><div class="drawer-actions"><button class="action danger" onclick="confirmApplication('${r.id}','差戻し中')">差戻し</button><button class="action primary" onclick="confirmApplication('${r.id}','承認済み')">承認</button></div></div>`:'';openDrawer(`${r.name} / ${r.type}`,`${r.id} / ${r.status}`,`<div class="drawer-section"><h4>申請内容</h4><div class="app-meta-strip"><div class="app-meta-item"><b>${r.company}</b><span>所属会社</span></div><div class="app-meta-item"><b>${r.target||r.date}</b><span>対象日</span></div><div class="app-meta-item"><b>${r.requested}</b><span>申請日</span></div><div class="app-meta-item"><b>${r.status}</b><span>ステータス</span></div></div><div class="log-title">本人コメント</div><div class="log-body">${r.reason}</div><div class="log-title">関連データ</div><div class="log-body">${r.related}</div></div>${processed}${returned}${actions}<div class="drawer-section"><h4>申請履歴</h4><div class="log-list">${r.history.map(h=>`<div class="log-item"><div class="log-top"><span>${h[0]} / ${h[2]}</span><span>${h[1]}</span></div><div class="log-body">${h[3]}</div></div>`).join('')}</div></div>`)}
  if(kind==='employee'){openEmployeeDetail(row.dataset.id)}
  if(kind==='rule'){openRuleDetail(row.dataset.id)}
 });}
@@ -1548,7 +1526,7 @@ function adminApi(action,params={}){
   }
   const query=new URLSearchParams(requestParams);
   const script=document.createElement('script');
-  const timer=setTimeout(()=>{cleanup();reject(new Error('GAS API timeout'));},15000);
+  const timer=setTimeout(()=>{cleanup();reject(new Error('GAS API timeout'));},45000);
   function cleanup(){clearTimeout(timer);delete window[callback];script.remove();}
   window[callback]=(res)=>{cleanup(); if(res&&res.ok!==false)resolve(res.data||res); else reject(new Error((res&&res.message)||'GAS API error'));};
   script.onerror=()=>{cleanup();reject(new Error('GAS API load error'));};
@@ -1586,15 +1564,7 @@ function applyAdminDashboardData(data){
  renderDashboardSummary(window.__adminDashboardSummary);
 }
 function applyAdminAttendanceData(data){if(data&&Array.isArray(data.rows))replaceAdminArray(attendance,data.rows);}
-function applyAdminApplicationsData(data){
- if(data&&Array.isArray(data.rows)){
-  replaceAdminArray(apps,data.rows);
-  const pendingFromRows=apps.filter(r=>!isCanceledApplication(r) && r.status==='承認待ち').length;
-  const summary=data.summary||{};
-  const pending=Number(summary.wait ?? summary.pendingApplications ?? summary.pendingApps ?? pendingFromRows);
-  window.__adminDashboardSummary=Object.assign({working:0,completed:0,notClocked:0,pendingApplications:0},window.__adminDashboardSummary||{}, {pendingApplications:pending,pendingApps:pending});
- }
-}
+function applyAdminApplicationsData(data){if(data&&Array.isArray(data.rows))replaceAdminArray(apps,data.rows);}
 function applyAdminEmployeesData(data){if(data&&Array.isArray(data.rows))replaceAdminArray(employees,data.rows);}
 function applyAdminWorkPatternsData(data){if(data&&Array.isArray(data.rows))replaceAdminArray(rules,data.rows);}
 async function loadAdminInitialData(options={}){
@@ -1602,43 +1572,24 @@ async function loadAdminInitialData(options={}){
  if(!adminHasApi())return;
  if(!adminSession||!adminSession.token){showAdminLogin();return;}
  if(!silent)document.body.classList.add('admin-loading');
- const requests=[
-  ['dashboard',adminApi(ADMIN_GAS_ACTIONS.dashboard)],
-  ['attendance',adminApi(ADMIN_GAS_ACTIONS.attendanceMonthly,{month:`${attCurrentYear}-${String(attCurrentMonth+1).padStart(2,'0')}`})],
-  ['applications',adminApi(ADMIN_GAS_ACTIONS.applications)],
-  ['employees',adminApi(ADMIN_GAS_ACTIONS.employees)],
-  ['workPatterns',adminApi(ADMIN_GAS_ACTIONS.workPatterns)]
- ];
  try{
-  const results=await Promise.allSettled(requests.map(x=>x[1]));
-  let authError=null;
-  results.forEach((result,i)=>{
-   const key=requests[i][0];
-   if(result.status==='rejected'){
-    const err=result.reason||new Error('GAS API error');
-    console.warn(`[NEXUS ONE Admin] ${key} load failed:`,err);
-    const msg=String(err.message||'');
-    if(msg.includes('認証')||msg.includes('期限')) authError=err;
-    return;
-   }
-   const data=result.value;
-   if(key==='dashboard')applyAdminDashboardData(data);
-   if(key==='attendance')applyAdminAttendanceData(data);
-   if(key==='applications')applyAdminApplicationsData(data);
-   if(key==='employees')applyAdminEmployeesData(data);
-   if(key==='workPatterns')applyAdminWorkPatternsData(data);
-  });
-  if(authError){clearAdminSession();showAdminLogin(authError.message);return;}
+  const [dash,att,app,emp,wp]=await Promise.all([
+   adminApi(ADMIN_GAS_ACTIONS.dashboard),
+   adminApi(ADMIN_GAS_ACTIONS.attendanceMonthly,{month:`${attCurrentYear}-${String(attCurrentMonth+1).padStart(2,'0')}`}),
+   adminApi(ADMIN_GAS_ACTIONS.applications),
+   adminApi(ADMIN_GAS_ACTIONS.employees),
+   adminApi(ADMIN_GAS_ACTIONS.workPatterns)
+  ]);
+  applyAdminDashboardData(dash);
+  applyAdminAttendanceData(att);
+  applyAdminApplicationsData(app);
+  applyAdminEmployeesData(emp);
+  applyAdminWorkPatternsData(wp);
   render();
   updateDashboardClock();
   setUpdatedAtNow();
   if(!silent)showAdminApp();
- }catch(err){
-  console.warn('[NEXUS ONE Admin] GAS load failed:',err);
-  const msg=String(err.message||'');
-  if(msg.includes('認証')||msg.includes('期限')){clearAdminSession();showAdminLogin(err.message);}
-  else{render(); if(!silent)showAdminApp();}
- }
+ }catch(err){console.warn('[NEXUS ONE Admin] GAS load failed:',err); if(String(err.message||'').includes('認証')||String(err.message||'').includes('期限')){clearAdminSession();showAdminLogin(err.message);}}
  finally{if(!silent)document.body.classList.remove('admin-loading');}
 }
 async function adminSyncApplicationStatus(id,nextStatus,comment){
