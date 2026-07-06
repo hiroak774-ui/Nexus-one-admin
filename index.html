@@ -1093,13 +1093,23 @@ function attFiltered(){
   return byFilter&&bySearch;
  });
 }
+function isInvalidWorkPatternText(value){
+ const s=String(value||'').trim();
+ if(!s)return false;
+ return /^\d{4}-\d{2}-\d{2}T/.test(s) || /^\d{4}[\/-]\d{1,2}[\/-]\d{1,2}/.test(s) || /T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(s);
+}
+function attendancePatternDisplay(r){
+ const type=String(r.type||'').trim();
+ if(type==='シフト勤務')return '<small class="attendance-pattern-note">日別シフトに基づき変動</small>';
+ const pattern=String(r.pattern||'').trim();
+ if(!pattern || isInvalidWorkPatternText(pattern))return '';
+ return `<small>${pattern}</small>`;
+}
 function renderAttendanceRows(){
  renderAttendanceSummary();
  const list=attFiltered(); const box=$('#attendanceRows'); if(!box)return;
  box.innerHTML=list.map(r=>{
-  const patternDisplay = r.type==='シフト勤務'
-    ? '<small class="attendance-pattern-note">日別シフトに基づき変動</small>'
-    : `<small>${r.pattern}</small>`;
+  const patternDisplay = attendancePatternDisplay(r);
   return `<div class="trow cols-att-v11" data-kind="attendance" data-id="${r.id}"><div class="cell"><strong>${r.name}</strong><small>${r.id} / ${r.email}</small></div><div class="cell">${r.company}</div><div class="cell"><strong>${r.type}</strong>${patternDisplay}</div><div class="cell">${r.days}日</div><div class="cell">${r.total}</div><div class="cell">${r.ot}</div><div class="cell att-issues ${r.needs?'orange':'green'}"><span class="mini-dot"></span>${r.needs?`${r.needs}件`:'なし'}</div><div class="cell">${status(r.cls,r.status)}</div></div>`;
  }).join('')||'<div class="empty">条件に一致する勤怠はありません。</div>';
 }
