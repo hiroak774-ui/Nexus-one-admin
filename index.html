@@ -1121,6 +1121,10 @@ function makeDailyRows(e){
   const iso=`${monthText}-${pad(day)}`;
   const src=byDate[iso];
   const appLogs=relatedApps.filter(a=>normalizeIsoDateText(a.date||a.targetDate||'')===iso);
+  const todayIso = localIsoDateText_(new Date());
+  const isPastDate = iso < todayIso;
+  const isTodayDate = iso === todayIso;
+  const isFutureDate = iso > todayIso;
   let row={
    d:`${pad(attCurrentMonth+1)}/${pad(day)}(${week})`,
    dayOnly:pad(day),
@@ -1129,9 +1133,9 @@ function makeDailyRows(e){
    in:'--:--',
    out:'--:--',
    work:'-',
-   main:'休日',
-   tag:'blue',
-   comment:'勤務実績なし',
+   main:isPastDate?'休日':(isTodayDate?'未打刻':'-'),
+   tag:isPastDate?'blue':(isTodayDate?'orange':'gray'),
+   comment:isPastDate?'勤務実績なし':'',
    logs:appLogs
   };
   if(src){
@@ -1150,6 +1154,12 @@ function makeDailyRows(e){
   rows.push(row);
  }
  return rows;
+}
+function localIsoDateText_(d){
+ const y=d.getFullYear();
+ const m=String(d.getMonth()+1).padStart(2,'0');
+ const day=String(d.getDate()).padStart(2,'0');
+ return `${y}-${m}-${day}`;
 }
 function normalizeIsoDateText(v){
  const s=String(v||'').trim();
